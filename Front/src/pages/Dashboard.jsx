@@ -26,38 +26,39 @@ export default function Dashboard() {
 
   if (!user)
     return (
-      <div className="vh-100 d-flex justify-content-center align-items-center text-white">
+      <div className="vh-100 d-flex justify-content-center align-items-center text-dark fw-bold">
         Loading dashboard...
       </div>
     );
 
   const features = [
-    { text: "Transfer", path: "/transfer", color: "#007bff", icon: "💸" },
-    { text: "Buy Airtime", path: "/airtime", color: "#28a745", icon: "📱" },
+    { text: "Transfer", path: "/transfer", color: "#0d6efd", icon: "💸" },
+    { text: "Buy Airtime", path: "/airtime", color: "#198754", icon: "📱" },
     { text: "Deposit", path: "/deposit", color: "#ffc107", icon: "💰" },
-    { text: "Transactions", path: "/transactions", color: "#17a2b8", icon: "📜" },
-    { text: "Profile", path: "/profile", color: "#6610f2", icon: "👤" },
+    { text: "Transactions", path: "/transactions", color: "#0dcaf0", icon: "📜" },
+    { text: "Profile", path: "/profile", color: "#6f42c1", icon: "👤" },
     { text: "Support", path: "/support", color: "#fd7e14", icon: "🛠️" },
   ];
 
   return (
     <div
-      className="min-vh-100 text-white"
+      className="min-vh-100"
       style={{
-        background: "linear-gradient(120deg, #0f2027, #203a43, #2c5364)",
+        backgroundColor: "#f4f6f8",
         fontFamily: "Poppins, sans-serif",
       }}
     >
+      {/* Navbar */}
       <nav
         className="d-flex justify-content-between align-items-center px-4 py-3 shadow-sm"
-        style={{ background: "rgba(255, 255, 255, 0.1)" }}
+        style={{ backgroundColor: "#ffffff" }}
       >
-        <h4 className="fw-bold text-light m-0">🏦 WC Bank</h4>
+        <h4 className="fw-bold text-dark m-0">WC Bank</h4>
         <div className="d-flex align-items-center gap-3">
-          <span>{user.name}</span>
+          <span className="fw-semibold text-dark">{user.name}</span>
           <motion.button
             whileTap={{ scale: 0.95 }}
-            className="btn btn-sm btn-outline-light"
+            className="btn btn-outline-secondary btn-sm"
             onClick={() => {
               localStorage.clear();
               navigate("/login");
@@ -69,35 +70,46 @@ export default function Dashboard() {
       </nav>
 
       <div className="container py-5">
+        {/* Account Overview Card */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
-          className="card bg-light text-dark shadow-lg rounded-4 p-4 mb-5"
+          transition={{ duration: 0.8 }}
+          className="card shadow-sm rounded-4 p-4 mb-5"
+          style={{ backgroundColor: "#ffffff" }}
         >
-          <h5 className="text-secondary">Account Overview</h5>
-          <h2 className="fw-bold text-primary mt-2">
+          <h5 className="text-muted mb-1 fw-bold">Account Overview</h5>
+          <h2 className="fw-bold text-dark mt-2">
             ₦{user.balance.toLocaleString()}
           </h2>
-          <p className="text-muted mb-0">
-            Account Number: <strong>{user.accountNumber}</strong>
+          <p className="text-secondary mb-0 fw-semibold">
+            Account Number: {user.accountNumber}
           </p>
         </motion.div>
 
+        {/* Feature Cards */}
         <div className="row g-4">
           {features.map((item, i) => (
             <motion.div
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.03 }}
               key={i}
-              className="col-6 col-md-4 col-lg-3"
+              className="col-12 col-md-6 col-lg-4"
             >
               <div
                 onClick={() => navigate(item.path)}
-                className="card text-center border-0 rounded-4 shadow-sm py-4 cursor-pointer"
-                style={{ backgroundColor: item.color, color: "white" }}
+                className="card border-0 shadow-sm rounded-4 p-4 text-center cursor-pointer"
+                style={{ backgroundColor: "#ffffff", transition: "0.3s" }}
               >
-                <div className="fs-2 mb-2">{item.icon}</div>
-                <h6>{item.text}</h6>
+                <div
+                  className="mb-3"
+                  style={{
+                    fontSize: "2rem",
+                    color: item.color,
+                  }}
+                >
+                  {item.icon}
+                </div>
+                <h5 className="fw-bold text-dark">{item.text}</h5>
               </div>
             </motion.div>
           ))}
