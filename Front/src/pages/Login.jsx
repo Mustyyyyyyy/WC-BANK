@@ -33,22 +33,25 @@ export default function Login() {
     <div
       className="d-flex justify-content-center align-items-center vh-100"
       style={{
-        background:
-          "linear-gradient(270deg, #007bff, #6610f2, #00b4d8, #007bff)",
+        background: "linear-gradient(270deg, #007bff, #6610f2, #00b4d8, #007bff)",
         backgroundSize: "800% 800%",
         animation: "gradientShift 12s ease infinite",
         fontFamily: "Poppins, sans-serif",
       }}
     >
       <motion.div
-        initial={{ opacity: 0, y: 60 }}
+        initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="card shadow-lg p-5 rounded-4 border-0"
-        style={{ maxWidth: "420px", width: "100%", background: "white" }}
+        className="card shadow-lg p-4 p-md-5 rounded-5 border-0"
+        style={{
+          maxWidth: "450px",
+          width: "100%",
+          backgroundColor: "rgba(255,255,255,0.95)",
+        }}
       >
         <h2 className="text-center mb-3 fw-bold text-primary">WC BANK 🏦</h2>
-        <p className="text-center text-secondary mb-4">
+        <p className="text-center text-muted mb-4">
           Welcome Back — Please Login
         </p>
 
@@ -58,17 +61,17 @@ export default function Login() {
               name="emailOrAccount"
               placeholder="Email or Account Number"
               onChange={handleChange}
-              className="form-control p-3"
+              className="form-control p-3 rounded-3 border-1 shadow-sm"
               required
             />
           </div>
           <div className="mb-3">
             <input
               name="password"
-              placeholder="Password"
               type="password"
+              placeholder="Password"
               onChange={handleChange}
-              className="form-control p-3"
+              className="form-control p-3 rounded-3 border-1 shadow-sm"
               required
             />
           </div>
@@ -80,13 +83,14 @@ export default function Login() {
           <motion.button
             whileTap={{ scale: 0.97 }}
             disabled={loading}
-            className="btn btn-primary w-100 fw-semibold py-2"
+            className="btn btn-primary w-100 fw-semibold py-2 rounded-3"
+            style={{ fontSize: "1.05rem" }}
           >
             {loading ? "Signing in..." : "Login"}
           </motion.button>
         </form>
 
-        <p className="text-center mt-4">
+        <p className="text-center mt-4 text-muted" style={{ fontSize: "0.875rem" }}>
           Don’t have an account?{" "}
           <Link
             to="/signup"

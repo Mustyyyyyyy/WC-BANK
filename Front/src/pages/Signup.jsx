@@ -18,7 +18,7 @@ export default function Signup() {
     setError("");
 
     const accountNumber = Math.floor(1000000000 + Math.random() * 9000000000);
-    const balance = Math.floor(5000 + Math.random() * 50000); 
+    const balance = Math.floor(5000 + Math.random() * 50000);
 
     try {
       const res = await api.post("/auth/signup", {
@@ -40,19 +40,23 @@ export default function Signup() {
     <div
       className="d-flex justify-content-center align-items-center vh-100"
       style={{
-        background: "linear-gradient(135deg, #6610f2, #007bff)",
+        background: "linear-gradient(135deg, #6f42c1, #0d6efd)",
         fontFamily: "Poppins, sans-serif",
       }}
     >
       <motion.div
-        initial={{ opacity: 0, y: 50 }}
+        initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="card shadow-lg p-5 rounded-4 border-0"
-        style={{ maxWidth: "420px", width: "100%" }}
+        className="card shadow-lg p-4 p-md-5 rounded-5 border-0"
+        style={{
+          maxWidth: "450px",
+          width: "100%",
+          backgroundColor: "rgba(255,255,255,0.95)",
+        }}
       >
-        <h2 className="text-center mb-4 fw-bold text-primary">WC BANK 🏦</h2>
-        <h5 className="text-center mb-4 text-secondary">Create Your Account</h5>
+        <h2 className="text-center mb-3 fw-bold text-primary">WC BANK 🏦</h2>
+        <h5 className="text-center mb-4 text-muted">Create Your Account</h5>
 
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
@@ -60,7 +64,7 @@ export default function Signup() {
               name="name"
               placeholder="Full Name"
               onChange={handleChange}
-              className="form-control p-3"
+              className="form-control p-3 rounded-3 border-1 shadow-sm"
               required
             />
           </div>
@@ -70,7 +74,7 @@ export default function Signup() {
               type="email"
               placeholder="Email Address"
               onChange={handleChange}
-              className="form-control p-3"
+              className="form-control p-3 rounded-3 border-1 shadow-sm"
               required
             />
           </div>
@@ -80,7 +84,7 @@ export default function Signup() {
               type="password"
               placeholder="Password"
               onChange={handleChange}
-              className="form-control p-3"
+              className="form-control p-3 rounded-3 border-1 shadow-sm"
               required
             />
           </div>
@@ -92,14 +96,18 @@ export default function Signup() {
           <motion.button
             whileTap={{ scale: 0.97 }}
             disabled={loading}
-            className="btn btn-primary w-100 fw-semibold py-2"
+            className="btn btn-primary w-100 fw-semibold py-2 rounded-3"
+            style={{ fontSize: "1.05rem" }}
           >
             {loading ? "Creating account..." : "Sign Up"}
           </motion.button>
         </form>
 
-        <p className="text-center mt-4">
-          By opening an account, you agree to WebVault's Terms & Conditions and Privacy Policy. <br />
+        <p className="text-center mt-4 text-muted" style={{ fontSize: "0.875rem" }}>
+          By creating an account, you agree to WC Bank's Terms & Conditions and Privacy Policy.
+        </p>
+
+        <p className="text-center mt-2">
           Already have an account?{" "}
           <Link
             to="/login"
