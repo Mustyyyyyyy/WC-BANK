@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
@@ -9,19 +9,21 @@ import Transactions from "./pages/Transactions";
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/transfer" element={<Transfer />} />
-        <Route path="/airtime" element={<Airtime />} />
-        <Route path="/transactions" element={<Transactions />} />
-        <Route path="*" element={<h2 className="text-center mt-5">404 Page Not Found</h2>} />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route path="/" element={<Signup />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/transfer" element={<Transfer />} />
+      <Route path="/airtime" element={<Airtime />} />
+      <Route path="/transactions" element={<Transactions />} />
+
+      <Route
+        path="*"
+        element={<h2 className="text-center mt-5">404 Page Not Found</h2>}
+      />
+    </Routes>
   );
 }
 
