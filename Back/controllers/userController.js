@@ -31,14 +31,29 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { emailOrAccount, password } = req.body;
-    const user = (await User.findOne({ email: emailOrAccount })) || (await User.findOne({ accountNumber: emailOrAccount }));
+
+    const user = await User.findOne({
+      $or: [{ email: emailOrAccount }, { accountNumber: emailOrAccount }],
+    });
+
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
     const token = generateToken(user._id);
-    res.json({ message: "Login successful", token, user: { _id: user._id, name: user.name, email: user.email, accountNumber: user.accountNumber, balance: user.balance } });
+
+    res.json({
+      message: "Login successful",
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        accountNumber: user.accountNumber,
+        balance: user.balance,
+      },
+    });
   } catch (err) {
     console.error("❌ Login Error:", err);
     res.status(500).json({ message: "Server error during login" });
