@@ -48,17 +48,33 @@ export default function Dashboard() {
         fontFamily: "Poppins, sans-serif",
       }}
     >
-      {/* Navbar */}
       <nav
-        className="d-flex justify-content-between align-items-center px-4 py-3 shadow-sm"
-        style={{ backgroundColor: "#ffffff" }}
+        className="d-flex justify-content-between align-items-center px-4 py-3"
+        style={{
+          background: "rgba(255, 255, 255, 0.7)",
+          backdropFilter: "blur(10px)",
+          borderBottom: "1px solid rgba(0,0,0,0.05)",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
+        }}
       >
-        <h4 className="fw-bold text-dark m-0">WC Bank</h4>
+        <h4 className="fw-bold text-dark m-0" style={{ opacity: 0.85 }}>
+          WC Bank
+        </h4>
         <div className="d-flex align-items-center gap-3">
-          <span className="fw-semibold text-dark">{user.name}</span>
+          <span className="fw-semibold text-dark" style={{ opacity: 0.85 }}>
+            {user.name}
+          </span>
           <motion.button
             whileTap={{ scale: 0.95 }}
-            className="btn btn-outline-secondary btn-sm"
+            className="btn btn-sm btn-outline-secondary"
+            style={{
+              borderRadius: "8px",
+              border: "1px solid rgba(0,0,0,0.1)",
+              opacity: 0.9,
+            }}
             onClick={() => {
               localStorage.clear();
               navigate("/login");
@@ -70,12 +86,11 @@ export default function Dashboard() {
       </nav>
 
       <div className="container py-5">
-        {/* Account Overview Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="card shadow-sm rounded-4 p-4 mb-5"
+          className="card shadow-sm rounded-4 p-4 mb-5 border-0"
           style={{ backgroundColor: "#ffffff" }}
         >
           <h5 className="text-muted mb-1 fw-bold">Account Overview</h5>
@@ -87,7 +102,6 @@ export default function Dashboard() {
           </p>
         </motion.div>
 
-        {/* Feature Cards */}
         <div className="row g-4">
           {features.map((item, i) => (
             <motion.div
@@ -98,7 +112,10 @@ export default function Dashboard() {
               <div
                 onClick={() => navigate(item.path)}
                 className="card border-0 shadow-sm rounded-4 p-4 text-center cursor-pointer"
-                style={{ backgroundColor: "#ffffff", transition: "0.3s" }}
+                style={{
+                  backgroundColor: "#ffffff",
+                  transition: "0.3s",
+                }}
               >
                 <div
                   className="mb-3"
@@ -118,4 +135,3 @@ export default function Dashboard() {
     </div>
   );
 }
-  

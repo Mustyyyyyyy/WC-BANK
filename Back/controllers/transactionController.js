@@ -4,38 +4,32 @@ let transactions = [];
 
 exports.transfer = async (req, res) => {
   try {
-    const { account, amount } = req.body;
+    const { recipientAccount, amount } = req.body;
     const sender = await User.findById(req.user.id);
-    const recipient = await User.findOne({ accountNumber: account });
 
+    if (!sender) return res.status(404).json({ message: "Sender not found" });
+    if (sender.accountNumber === recipientAccount)
+      return res.status(400).json({ message: "You cannot transfer to yourself" });
+
+    const recipient = await User.findOne({ accountNumber: recipientAccount.trim() });
     if (!recipient) return res.status(404).json({ message: "Recipient not found" });
 
-    const transferAmount = Number(amount);
-    if (transferAmount <= 0) return res.status(400).json({ message: "Invalid amount" });
-    if (sender.balance < transferAmount)
-      return res.status(400).json({ message: "Insufficient balance" });
+    if (sender.balance < amount)
+      return res.status(400).json({ message: "Insufficient funds" });
 
-    sender.balance -= transferAmount;
-    recipient.balance += transferAmount;
+    sender.balance -= amount;
+    recipient.balance += amount;
 
     await sender.save();
     await recipient.save();
 
-    const record = {
-      from: sender.accountNumber,
-      to: recipient.accountNumber,
-      amount: transferAmount,
-      type: "Transfer",
-      date: new Date(),
-    };
-    transactions.push(record);
-
-    res.json({ message: "Transfer successful", transaction: record });
+    res.json({ message: "Transfer successful" });
   } catch (err) {
     console.error("❌ Transfer Error:", err);
     res.status(500).json({ message: "Server error during transfer" });
   }
 };
+
 
 exports.airtime = async (req, res) => {
   try {
