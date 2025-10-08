@@ -11,29 +11,16 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true); 
-
-      const allowedOrigins = [
-        "http://localhost:5173",       
-        "https://wc-bank-d92y.vercel.app", 
-      ];
-
-      if (allowedOrigins.includes(origin) || origin.includes("vercel.app")) {
-        return callback(null, true);
-      }
-
-      const msg = `🚫 CORS policy: Origin not allowed — ${origin}`;
-      return callback(new Error(msg), false);
-    },
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    origin: [
+      "http://localhost:5173", 
+      "https://wc-bank-d92y.vercel.app", 
+    ],
     credentials: true,
   })
 );
 
 mongoose
-  .connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/wcbank")
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB connected successfully"))
   .catch((err) => console.error("❌ MongoDB Connection Error:", err.message));
 
@@ -45,8 +32,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionRoutes);
 
 app.get("/", (req, res) => {
-  res.send("🚀 WC Bank API is live and running smoothly!");
+  res.send("🚀 WC Bank API is live!");
 });
+
 
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });

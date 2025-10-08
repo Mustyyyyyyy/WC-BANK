@@ -9,7 +9,6 @@ const generateToken = (id) =>
 exports.signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-
     if (!name || !email || !password)
       return res.status(400).json({ message: "All fields are required." });
 
@@ -17,10 +16,7 @@ exports.signup = async (req, res) => {
     if (existingUser)
       return res.status(400).json({ message: "Email already registered." });
 
-    const accountNumber = Math.floor(
-      1000000000 + Math.random() * 9000000000
-    ).toString();
-
+    const accountNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
@@ -42,37 +38,11 @@ exports.signup = async (req, res) => {
     });
 
     const htmlContent = `
-      <div style="font-family: Arial, sans-serif; background-color: #f8fafc; padding: 30px;">
-        <div style="max-width: 600px; margin: auto; background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); overflow: hidden;">
-          <div style="background: linear-gradient(90deg, #0066ff, #0099ff); color: white; padding: 20px; text-align: center;">
-            <h2 style="margin: 0;">Welcome to WC Bank 💳</h2>
-          </div>
-          <div style="padding: 25px;">
-            <h3 style="color: #333;">Hi ${name},</h3>
-            <p style="color: #555; line-height: 1.6;">
-              🎉 <b>Welcome aboard!</b> Your digital banking journey with <b>WC Bank</b> starts now.
-            </p>
-            <p style="color: #555; line-height: 1.6;">Here are your account details:</p>
-            <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; margin: 10px 0;">
-              <p style="margin: 5px 0;"><strong>Account Name:</strong> ${name}</p>
-              <p style="margin: 5px 0;"><strong>Account Number:</strong> ${accountNumber}</p>
-              <p style="margin: 5px 0;"><strong>Initial Balance:</strong> ₦1,000.00</p>
-            </div>
-            <p style="color: #555; line-height: 1.6;">
-              You can now log in, explore your dashboard, send funds, and enjoy seamless digital banking.
-            </p>
-            <div style="text-align: center; margin-top: 25px;">
-              <a href="https://wc-bank-d92y.vercel.app/login"
-                 style="background: #0066ff; color: white; padding: 12px 25px; border-radius: 6px; text-decoration: none; font-weight: bold;">
-                 Go to Login
-              </a>
-            </div>
-            <p style="margin-top: 30px; color: #777; font-size: 14px; text-align: center;">
-              Thank you for choosing <b>WC Bank</b>.<br/>
-              — Your trusted partner in digital banking.
-            </p>
-          </div>
-        </div>
+      <div style="font-family: Arial, sans-serif; padding: 20px; background: #f0f4f8;">
+        <h2>Welcome to WC Bank 💳, ${name}!</h2>
+        <p>Your account number is: <b>${accountNumber}</b></p>
+        <p>Initial balance: ₦1,000.00</p>
+        <a href="https://wc-bank-d92y.vercel.app/login" style="display:inline-block;margin-top:20px;padding:10px 20px;background:#0066ff;color:white;border-radius:5px;text-decoration:none;">Go to Login</a>
       </div>
     `;
 
@@ -95,7 +65,7 @@ exports.signup = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("❌ Signup Error:", err.message);
+    console.error("❌ Signup Error:", err);
     res.status(500).json({ message: "Server error during signup." });
   }
 };
@@ -103,25 +73,19 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const emailOrAccount = email?.trim();
 
-    if (!emailOrAccount || !password)
+    if (!email || !password)
       return res.status(400).json({ message: "All fields are required." });
 
-    const user = await User.findOne({
-      $or: [{ email: emailOrAccount }, { accountNumber: emailOrAccount }],
-    });
-
-    if (!user)
-      return res.status(404).json({ message: "User not found." });
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found." });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(400).json({ message: "Invalid credentials." });
+    if (!isMatch) return res.status(400).json({ message: "Invalid credentials." });
 
     const token = generateToken(user._id);
 
-    res.status(200).json({
+    res.json({
       message: "Login successful.",
       token,
       user: {
@@ -133,7 +97,7 @@ exports.login = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("❌ Login Error:", err.message);
+    console.error("❌ Login Error:", err);
     res.status(500).json({ message: "Server error during login." });
   }
 };
@@ -144,7 +108,7 @@ exports.getDashboard = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found." });
     res.json({ user });
   } catch (err) {
-    console.error("❌ Dashboard Error:", err.message);
+    console.error("❌ Dashboard Error:", err);
     res.status(500).json({ message: "Error loading dashboard." });
   }
 };
@@ -155,7 +119,7 @@ exports.getProfile = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found." });
     res.json({ user });
   } catch (err) {
-    console.error("❌ Profile Error:", err.message);
+    console.error("❌ Profile Error:", err);
     res.status(500).json({ message: "Error fetching profile." });
   }
 };
@@ -165,7 +129,7 @@ exports.getAllUsers = async (req, res) => {
     const users = await User.find().select("name accountNumber _id");
     res.json({ users });
   } catch (err) {
-    console.error("❌ Get Users Error:", err.message);
+    console.error("❌ Get Users Error:", err);
     res.status(500).json({ message: "Error fetching users." });
   }
 };

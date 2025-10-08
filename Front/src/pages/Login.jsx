@@ -32,40 +32,12 @@ export default function Login() {
 
   return (
     <div
-      className="d-flex justify-content-center align-items-center vh-100 position-relative"
+      className="d-flex justify-content-center align-items-center vh-100"
       style={{
         background: "linear-gradient(135deg, #0f2027, #203a43, #2c5364)",
         fontFamily: "Poppins, sans-serif",
-        overflow: "hidden",
       }}
     >
-      <motion.div
-        animate={{ opacity: [0.5, 1, 0.5] }}
-        transition={{ duration: 10, repeat: Infinity }}
-        className="position-absolute rounded-circle"
-        style={{
-          width: 300,
-          height: 300,
-          top: "10%",
-          left: "15%",
-          background: "rgba(0, 183, 255, 0.2)",
-          filter: "blur(100px)",
-        }}
-      />
-      <motion.div
-        animate={{ opacity: [0.4, 0.9, 0.4] }}
-        transition={{ duration: 12, repeat: Infinity }}
-        className="position-absolute rounded-circle"
-        style={{
-          width: 350,
-          height: 350,
-          bottom: "10%",
-          right: "15%",
-          background: "rgba(0, 119, 255, 0.25)",
-          filter: "blur(100px)",
-        }}
-      />
-
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
@@ -77,70 +49,46 @@ export default function Login() {
           background: "rgba(255, 255, 255, 0.1)",
           backdropFilter: "blur(20px)",
           color: "white",
-          zIndex: 5,
         }}
       >
         <h2 className="fw-bold mb-2">🏦 WC BANK</h2>
-        <h5 className="fw-semibold mb-4 text-light">
-          Welcome Back — Login to Continue
-        </h5>
+        <h5 className="fw-semibold mb-4 text-light">Login to Continue</h5>
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <input
-              name="email"
-              type="text"
-              placeholder="Email or Account Number"
-              value={form.email}
-              onChange={handleChange}
-              className="form-control p-3 fw-semibold rounded-3 border-0 shadow-sm"
-              style={{ background: "rgba(255,255,255,0.9)" }}
-              required
-            />
-          </div>
-          <div className="mb-3">
-            <input
-              name="password"
-              type="password"
-              placeholder="Password"
-              value={form.password}
-              onChange={handleChange}
-              className="form-control p-3 fw-semibold rounded-3 border-0 shadow-sm"
-              style={{ background: "rgba(255,255,255,0.9)" }}
-              required
-            />
-          </div>
+          <input
+            className="form-control mb-3 p-3 rounded-3"
+            placeholder="Email Address"
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            required
+          />
+          <input
+            className="form-control mb-3 p-3 rounded-3"
+            placeholder="Password"
+            name="password"
+            type="password"
+            value={form.password}
+            onChange={handleChange}
+            required
+          />
 
-          {error && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-danger fw-bold small mb-3"
-            >
-              {error}
-            </motion.p>
-          )}
+          {error && <p className="text-danger small">{error}</p>}
 
           <motion.button
             whileTap={{ scale: 0.95 }}
             disabled={loading}
-            className="btn w-100 fw-bold py-2 rounded-3 shadow"
-            style={{
-              background: "linear-gradient(90deg, #00c6ff, #0072ff)",
-              color: "white",
-            }}
+            className="btn w-100 py-2 fw-bold"
+            style={{ background: "#0072ff", color: "white" }}
           >
             {loading ? "Signing in..." : "Login"}
           </motion.button>
         </form>
 
-        <p className="mt-4 fw-semibold text-light" style={{ fontSize: "0.9rem" }}>
+        <p className="mt-3 text-light">
           Don’t have an account?{" "}
-          <Link
-            to="/signup"
-            className="text-decoration-none fw-bold"
-            style={{ color: "#00c6ff" }}
-          >
+          <Link to="/signup" style={{ color: "#00c6ff" }}>
             Sign Up
           </Link>
         </p>
