@@ -3,7 +3,9 @@ const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const User = require("../models/user.model");
 
-const generateToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+const generateToken = (id) =>
+  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+
 
 exports.signup = async (req, res) => {
   try {
@@ -17,6 +19,7 @@ exports.signup = async (req, res) => {
       return res.status(400).json({ message: "Email already registered." });
 
     const accountNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
@@ -48,19 +51,13 @@ exports.signup = async (req, res) => {
             <p style="color: #555; line-height: 1.6;">
               🎉 <b>Welcome aboard!</b> Your digital banking journey with <b>WC Bank</b> starts now.
             </p>
-            <p style="color: #555; line-height: 1.6;">
-              Here are your account details:
-            </p>
             <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; margin: 10px 0;">
               <p style="margin: 5px 0;"><strong>Account Name:</strong> ${name}</p>
               <p style="margin: 5px 0;"><strong>Account Number:</strong> ${accountNumber}</p>
               <p style="margin: 5px 0;"><strong>Initial Balance:</strong> ₦1,000.00</p>
             </div>
-            <p style="color: #555; line-height: 1.6;">
-              You can now log in, explore your dashboard, send funds, and enjoy a seamless banking experience.
-            </p>
             <div style="text-align: center; margin-top: 25px;">
-              <a href="https://wc-bank.vercel.app/login" 
+              <a href="<a href="https://wc-bank-d92y.vercel.app/login"n" 
                  style="background: #0066ff; color: white; padding: 12px 25px; border-radius: 6px; text-decoration: none; font-weight: bold;">
                  Go to Dashboard
               </a>
@@ -97,6 +94,7 @@ exports.signup = async (req, res) => {
     res.status(500).json({ message: "Server error during signup." });
   }
 };
+
 
 exports.login = async (req, res) => {
   try {
@@ -135,15 +133,18 @@ exports.login = async (req, res) => {
   }
 };
 
+
 exports.getDashboard = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found." });
     res.json({ user });
   } catch (err) {
     console.error("❌ Dashboard Error:", err);
     res.status(500).json({ message: "Error loading dashboard." });
   }
 };
+
 
 exports.getProfile = async (req, res) => {
   try {
@@ -155,6 +156,7 @@ exports.getProfile = async (req, res) => {
     res.status(500).json({ message: "Error fetching profile." });
   }
 };
+
 
 exports.getAllUsers = async (req, res) => {
   try {
