@@ -1,32 +1,30 @@
 import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { useNavigate, Link } from "react-router-dom";
 import api from "../api";
-import { useNavigate } from "react-router-dom";
 
 export default function Login() {
-  const [emailOrAccount, setEmailOrAccount] = useState("");
-  const [password, setPassword] = useState("");
-  const [msg, setMsg] = useState("");
+  const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setMsg("");
     setLoading(true);
+    setError("");
 
     try {
-      const res = await api.post("/auth/login", {
-        emailOrAccount,
-        password,
-      });
-
+      const res = await api.post("/auth/login", form);
       localStorage.setItem("token", res.data.token);
-      setMsg("✅ Login successful! Redirecting...");
-
-      setTimeout(() => navigate("/dashboard"), 1500);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      navigate("/dashboard");
     } catch (err) {
-      console.error("Login Error:", err.response?.data || err.message);
-      setMsg(err.response?.data?.message || "❌ Login failed.");
+      console.error("Login error:", err.response || err);
+      setError(err.response?.data?.message || "Invalid credentials.");
     } finally {
       setLoading(false);
     }
@@ -34,69 +32,119 @@ export default function Login() {
 
   return (
     <div
-      className="d-flex align-items-center justify-content-center vh-100"
+      className="d-flex justify-content-center align-items-center vh-100 position-relative"
       style={{
-        background: "linear-gradient(135deg, #00ccff, #0066ff)",
-        color: "white",
+        background: "linear-gradient(135deg, #0f2027, #203a43, #2c5364)",
+        fontFamily: "Poppins, sans-serif",
+        overflow: "hidden",
       }}
     >
-      <div
-        className="p-4 rounded shadow"
+      <motion.div
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 10, repeat: Infinity }}
+        className="position-absolute rounded-circle"
         style={{
-          width: "100%",
-          maxWidth: "400px",
-          backgroundColor: "white",
-          color: "#333",
+          width: 300,
+          height: 300,
+          top: "10%",
+          left: "15%",
+          background: "rgba(0, 183, 255, 0.2)",
+          filter: "blur(100px)",
+        }}
+      />
+      <motion.div
+        animate={{ opacity: [0.4, 0.9, 0.4] }}
+        transition={{ duration: 12, repeat: Infinity }}
+        className="position-absolute rounded-circle"
+        style={{
+          width: 350,
+          height: 350,
+          bottom: "10%",
+          right: "15%",
+          background: "rgba(0, 119, 255, 0.25)",
+          filter: "blur(100px)",
+        }}
+      />
+
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="card p-5 shadow-lg rounded-4 border-0 text-center"
+        style={{
+          maxWidth: "430px",
+          width: "90%",
+          background: "rgba(255, 255, 255, 0.1)",
+          backdropFilter: "blur(20px)",
+          color: "white",
+          zIndex: 5,
         }}
       >
-        <h2 className="text-center mb-4">Login to WC Bank</h2>
-        <form onSubmit={handleLogin}>
+        <h2 className="fw-bold mb-2">🏦 WC BANK</h2>
+        <h5 className="fw-semibold mb-4 text-light">
+          Welcome Back — Login to Continue
+        </h5>
+
+        <form onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label>Email or Account Number</label>
             <input
+              name="email"
               type="text"
-              className="form-control"
-              value={emailOrAccount}
-              onChange={(e) => setEmailOrAccount(e.target.value)}
+              placeholder="Email or Account Number"
+              value={form.email}
+              onChange={handleChange}
+              className="form-control p-3 fw-semibold rounded-3 border-0 shadow-sm"
+              style={{ background: "rgba(255,255,255,0.9)" }}
               required
-              placeholder="Enter email or account number"
             />
           </div>
-
           <div className="mb-3">
-            <label>Password</label>
             <input
+              name="password"
               type="password"
-              className="form-control"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              className="form-control p-3 fw-semibold rounded-3 border-0 shadow-sm"
+              style={{ background: "rgba(255,255,255,0.9)" }}
               required
-              placeholder="Enter your password"
             />
           </div>
 
-          <button
-            type="submit"
-            className="btn btn-primary w-100"
+          {error && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-danger fw-bold small mb-3"
+            >
+              {error}
+            </motion.p>
+          )}
+
+          <motion.button
+            whileTap={{ scale: 0.95 }}
             disabled={loading}
+            className="btn w-100 fw-bold py-2 rounded-3 shadow"
+            style={{
+              background: "linear-gradient(90deg, #00c6ff, #0072ff)",
+              color: "white",
+            }}
           >
-            {loading ? "Logging in..." : "Login"}
-          </button>
+            {loading ? "Signing in..." : "Login"}
+          </motion.button>
         </form>
 
-        {msg && (
-          <div className="mt-3 text-center" style={{ color: "#0066ff" }}>
-            {msg}
-          </div>
-        )}
-
-        <div className="mt-3 text-center">
+        <p className="mt-4 fw-semibold text-light" style={{ fontSize: "0.9rem" }}>
           Don’t have an account?{" "}
-          <a href="/signup" style={{ color: "#0066ff" }}>
+          <Link
+            to="/signup"
+            className="text-decoration-none fw-bold"
+            style={{ color: "#00c6ff" }}
+          >
             Sign Up
-          </a>
-        </div>
-      </div>
+          </Link>
+        </p>
+      </motion.div>
     </div>
   );
 }

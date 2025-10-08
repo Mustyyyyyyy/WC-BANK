@@ -8,15 +8,18 @@ dotenv.config();
 const app = express();
 
 app.use(express.json());
+
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
+      if (!origin) return callback(null, true); 
 
-      if (
-        origin.includes("vercel.app") ||
-        origin === "http://localhost:3000"
-      ) {
+      const allowedOrigins = [
+        "http://localhost:5173",       
+        "https://wc-bank-d92y.vercel.app", 
+      ];
+
+      if (allowedOrigins.includes(origin) || origin.includes("vercel.app")) {
         return callback(null, true);
       }
 
@@ -33,6 +36,7 @@ mongoose
   .connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/wcbank")
   .then(() => console.log("✅ MongoDB connected successfully"))
   .catch((err) => console.error("❌ MongoDB Connection Error:", err.message));
+
 
 const authRoutes = require("./routes/userRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
@@ -54,6 +58,4 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3220;
-app.listen(PORT, () =>
-  console.log(`✅ Server running on port ${PORT}`)
-);
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

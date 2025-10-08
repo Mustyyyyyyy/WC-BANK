@@ -6,7 +6,6 @@ const User = require("../models/user.model");
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-
 exports.signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -18,7 +17,9 @@ exports.signup = async (req, res) => {
     if (existingUser)
       return res.status(400).json({ message: "Email already registered." });
 
-    const accountNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+    const accountNumber = Math.floor(
+      1000000000 + Math.random() * 9000000000
+    ).toString();
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -51,15 +52,19 @@ exports.signup = async (req, res) => {
             <p style="color: #555; line-height: 1.6;">
               🎉 <b>Welcome aboard!</b> Your digital banking journey with <b>WC Bank</b> starts now.
             </p>
+            <p style="color: #555; line-height: 1.6;">Here are your account details:</p>
             <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; margin: 10px 0;">
               <p style="margin: 5px 0;"><strong>Account Name:</strong> ${name}</p>
               <p style="margin: 5px 0;"><strong>Account Number:</strong> ${accountNumber}</p>
               <p style="margin: 5px 0;"><strong>Initial Balance:</strong> ₦1,000.00</p>
             </div>
+            <p style="color: #555; line-height: 1.6;">
+              You can now log in, explore your dashboard, send funds, and enjoy seamless digital banking.
+            </p>
             <div style="text-align: center; margin-top: 25px;">
-              <a href="<a href="https://wc-bank-d92y.vercel.app/login"n" 
+              <a href="https://wc-bank-d92y.vercel.app/login"
                  style="background: #0066ff; color: white; padding: 12px 25px; border-radius: 6px; text-decoration: none; font-weight: bold;">
-                 Go to Dashboard
+                 Go to Login
               </a>
             </div>
             <p style="margin-top: 30px; color: #777; font-size: 14px; text-align: center;">
@@ -90,15 +95,15 @@ exports.signup = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("❌ Signup Error:", err);
+    console.error("❌ Signup Error:", err.message);
     res.status(500).json({ message: "Server error during signup." });
   }
 };
 
-
 exports.login = async (req, res) => {
   try {
-    const { emailOrAccount, password } = req.body;
+    const { email, password } = req.body;
+    const emailOrAccount = email?.trim();
 
     if (!emailOrAccount || !password)
       return res.status(400).json({ message: "All fields are required." });
@@ -116,7 +121,7 @@ exports.login = async (req, res) => {
 
     const token = generateToken(user._id);
 
-    res.json({
+    res.status(200).json({
       message: "Login successful.",
       token,
       user: {
@@ -128,11 +133,10 @@ exports.login = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("❌ Login Error:", err);
+    console.error("❌ Login Error:", err.message);
     res.status(500).json({ message: "Server error during login." });
   }
 };
-
 
 exports.getDashboard = async (req, res) => {
   try {
@@ -140,11 +144,10 @@ exports.getDashboard = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found." });
     res.json({ user });
   } catch (err) {
-    console.error("❌ Dashboard Error:", err);
+    console.error("❌ Dashboard Error:", err.message);
     res.status(500).json({ message: "Error loading dashboard." });
   }
 };
-
 
 exports.getProfile = async (req, res) => {
   try {
@@ -152,18 +155,17 @@ exports.getProfile = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found." });
     res.json({ user });
   } catch (err) {
-    console.error("❌ Profile Error:", err);
+    console.error("❌ Profile Error:", err.message);
     res.status(500).json({ message: "Error fetching profile." });
   }
 };
-
 
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select("name accountNumber _id");
     res.json({ users });
   } catch (err) {
-    console.error("❌ Get Users Error:", err);
+    console.error("❌ Get Users Error:", err.message);
     res.status(500).json({ message: "Error fetching users." });
   }
 };
