@@ -9,6 +9,7 @@ const generateToken = (id) =>
 exports.signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
+
     if (!name || !email || !password)
       return res.status(400).json({ message: "All fields are required." });
 
@@ -29,32 +30,35 @@ exports.signup = async (req, res) => {
 
     const token = generateToken(user._id);
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    try {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
 
-    const htmlContent = `
-      <div style="font-family: Arial, sans-serif; padding: 20px; background: #f0f4f8;">
-        <h2>Welcome to WC Bank 💳, ${name}!</h2>
-        <p>Your account number is: <b>${accountNumber}</b></p>
-        <p>Initial balance: ₦1,000.00</p>
-        <a href="https://wc-bank-d92y.vercel.app/login" style="display:inline-block;margin-top:20px;padding:10px 20px;background:#0066ff;color:white;border-radius:5px;text-decoration:none;">Go to Login</a>
-      </div>
-    `;
+      const htmlContent = `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2>Welcome to WC Bank, ${name}!</h2>
+          <p>Your account number is <b>${accountNumber}</b> with initial balance ₦1,000.00</p>
+          <p>You can log in here: <a href="https://wc-bank-d92y.vercel.app/login">Login</a></p>
+        </div>
+      `;
 
-    await transporter.sendMail({
-      from: `"WC Bank" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "🎉 Welcome to WC Bank — Your Account is Ready!",
-      html: htmlContent,
-    });
+      await transporter.sendMail({
+        from: `"WC Bank" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "Welcome to WC Bank!",
+        html: htmlContent,
+      });
+    } catch (emailErr) {
+      console.error("⚠️ Failed to send welcome email:", emailErr.message);
+    }
 
     res.status(201).json({
-      message: "Signup successful — welcome email sent!",
+      message: "Signup successful!",
       token,
       user: {
         id: user._id,
@@ -77,11 +81,16 @@ exports.login = async (req, res) => {
     if (!email || !password)
       return res.status(400).json({ message: "All fields are required." });
 
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found." });
+    const user = await User.findOne({
+      $or: [{ email }, { accountNumber: email }],
+    });
+
+    if (!user)
+      return res.status(404).json({ message: "User not found." });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid credentials." });
+    if (!isMatch)
+      return res.status(400).json({ message: "Invalid credentials." });
 
     const token = generateToken(user._id);
 
@@ -101,6 +110,7 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: "Server error during login." });
   }
 };
+
 
 exports.getDashboard = async (req, res) => {
   try {
