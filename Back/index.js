@@ -7,39 +7,33 @@ dotenv.config();
 
 const app = express();
 
-
 app.use(express.json());
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
+const allowedOrigins = [
+  "http://localhost:5173",          
+  "http://localhost:3220",       
+  "https://wc-bank-d92y.vercel.app"   
+];
 
-      const allowedOrigins = [
-        "http://localhost:5173",
-        "http://localhost:3220",
-        "https://wc-bank-d92y.vercel.app/", 
-      ];
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      const msg = `🚫 CORS policy: Origin not allowed — ${origin}`;
+      return callback(new Error(msg), false);
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+}));
 
-      return callback(
-        new Error(`🚫 CORS policy: Origin not allowed — ${origin}`),
-        false
-      );
-    },
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  })
-);
-
-mongoose
-  .connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/wcbank")
+mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/wcbank")
   .then(() => console.log("✅ MongoDB connected successfully"))
-  .catch((err) => console.error("❌ MongoDB Connection Error:", err.message));
+  .catch(err => console.error("❌ MongoDB Connection Error:", err.message));
 
 const authRoutes = require("./routes/userRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
