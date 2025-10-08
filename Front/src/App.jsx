@@ -6,6 +6,7 @@ import Profile from "./pages/Profile";
 import Transfer from "./pages/Transfer";
 import Airtime from "./pages/Airtime";
 import Transactions from "./pages/Transactions";
+import TransferSuccess from "./pages/TransferSuccess";
 
 function App() {
   return (
@@ -18,6 +19,8 @@ function App() {
       <Route path="/transfer" element={<Transfer />} />
       <Route path="/airtime" element={<Airtime />} />
       <Route path="/transactions" element={<Transactions />} />
+      <Route path="/transfersuccess" element={<TransferSuccess />} />
+
 
       <Route
         path="*"

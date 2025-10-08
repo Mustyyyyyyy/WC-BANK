@@ -1,6 +1,6 @@
 const express = require("express");
 const {
-  register,
+  signup,
   login,
   getDashboard,
   getProfile,
@@ -10,7 +10,7 @@ const { protect } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-router.post("/signup", register);
+router.post("/signup", signup);
 router.post("/login", login);
 router.get("/me", protect, getProfile);
 router.get("/dashboard", protect, getDashboard);

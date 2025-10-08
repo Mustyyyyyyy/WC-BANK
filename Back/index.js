@@ -10,7 +10,7 @@ const app = express();
 // ✅ Allowed Origins (no trailing slash!)
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://wc-bank.vercel.app",
+  "https://wc-bank.vercel.app"
 ];
 
 // ✅ Middleware
@@ -18,10 +18,9 @@ app.use(express.json());
 app.use(
   cors({
     origin: function (origin, callback) {
-      console.log("🔍 Incoming Origin:", origin);
       if (!origin) return callback(null, true);
       if (!allowedOrigins.includes(origin)) {
-        const msg = "🚫 CORS policy: Access from this origin is not allowed.";
+        const msg = "🚫 CORS policy: Origin not allowed.";
         return callback(new Error(msg), false);
       }
       return callback(null, true);
@@ -32,7 +31,7 @@ app.use(
   })
 );
 
-// ✅ Database connection
+// ✅ MongoDB Connection
 mongoose
   .connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/wcbank")
   .then(() => console.log("✅ MongoDB connected successfully"))
