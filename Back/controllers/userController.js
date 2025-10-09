@@ -102,9 +102,12 @@ exports.login = async (req, res) => {
     if (mongoose.connection.readyState !== 1)
       return res.status(500).json({ message: "Database not connected." });
 
-    const user = await User.findOne({
-      $or: [{ email }, { accountNumber: email }],
-    });
+    let user;
+    if (/^\d+$/.test(email)) {
+      user = await User.findOne({ accountNumber: email });
+    } else {
+      user = await User.findOne({ email });
+    }
 
     if (!user)
       return res.status(404).json({ message: "User not found." });
@@ -127,11 +130,11 @@ exports.login = async (req, res) => {
       },
     });
   } catch (err) {
-  console.error("❌ Login Error Details:", err);
-  res.status(500).json({ message: err.message });
-}
-
+    console.error("❌ Login Error Details:", err);
+    res.status(500).json({ message: err.message });
+  }
 };
+
 
 
 exports.getDashboard = async (req, res) => {
