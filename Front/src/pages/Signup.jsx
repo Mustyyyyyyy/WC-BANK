@@ -4,25 +4,25 @@ import axios from "axios";
 export default function Signup() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [msg, setMsg] = useState("");
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage("");
+    setMsg("");
 
     try {
-      const res = await axios.post("https://wc-2.onrender.com/api/auth/signup", form, {
-        headers: { "Content-Type": "application/json" },
-      });
-      console.log("✅ Signup Response:", res.data);
-      setMessage(res.data.message);
+      const res = await axios.post(
+        "https://wc-2.onrender.com/api/auth/signup",
+        form
+      );
+      setMsg(res.data.message || "Signup successful!");
       setForm({ name: "", email: "", password: "" });
     } catch (err) {
-      console.error("❌ Signup Error:", err.response || err);
-      setMessage(err.response?.data?.message || "Signup failed. Server error.");
+      setMsg(err.response?.data?.message || "Signup failed.");
     } finally {
       setLoading(false);
     }
@@ -35,59 +35,46 @@ export default function Signup() {
         background: "linear-gradient(135deg, #6a11cb, #2575fc)",
       }}
     >
-      <div
-        className="card shadow-lg p-4"
-        style={{
-          maxWidth: "400px",
-          width: "100%",
-          borderRadius: "15px",
-          transition: "transform 0.3s, box-shadow 0.3s",
-        }}
-      >
-        <h2 className="text-center mb-4 text-primary">Create Account</h2>
+      <div className="card p-4 shadow" style={{ width: "350px", borderRadius: "12px" }}>
+        <h3 className="text-center text-primary mb-3">Create Account</h3>
+
         <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <input
-              type="text"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              className="form-control"
-              placeholder="Full Name"
-              required
-            />
-          </div>
-          <div className="mb-3">
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              className="form-control"
-              placeholder="Email Address"
-              required
-            />
-          </div>
-          <div className="mb-3">
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              className="form-control"
-              placeholder="Password"
-              required
-            />
-          </div>
-          <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+          <input
+            type="text"
+            name="name"
+            placeholder="Full Name"
+            className="form-control mb-3"
+            value={form.name}
+            onChange={handleChange}
+            required
+          />
+
+          <input
+            type="email"
+            name="email"
+            placeholder="Email Address"
+            className="form-control mb-3"
+            value={form.email}
+            onChange={handleChange}
+            required
+          />
+
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            className="form-control mb-3"
+            value={form.password}
+            onChange={handleChange}
+            required
+          />
+
+          <button className="btn btn-primary w-100" disabled={loading}>
             {loading ? "Signing up..." : "Sign Up"}
           </button>
         </form>
-        {message && (
-          <div className="alert alert-light mt-3 text-center" role="alert">
-            {message}
-          </div>
-        )}
+
+        {msg && <div className="alert alert-light mt-3 text-center">{msg}</div>}
       </div>
     </div>
   );

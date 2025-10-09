@@ -1,28 +1,32 @@
 import { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [msg, setMsg] = useState("");
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage("");
+    setMsg("");
 
     try {
-      const res = await axios.post("https://wc-2.onrender.com/api/auth/login", form, {
-        headers: { "Content-Type": "application/json" },
-      });
-      console.log("✅ Login Response:", res.data);
-      setMessage(res.data.message);
+      const res = await axios.post(
+        "https://wc-2.onrender.com/api/auth/login",
+        form
+      );
+
       localStorage.setItem("token", res.data.token);
+      setMsg("Login successful!");
+      navigate("/dashboard");
     } catch (err) {
-      console.error("❌ Login Error:", err.response || err);
-      setMessage(err.response?.data?.message || "Login failed. Server error.");
+      setMsg(err.response?.data?.message || "Login failed.");
     } finally {
       setLoading(false);
     }
@@ -35,48 +39,36 @@ export default function Login() {
         background: "linear-gradient(135deg, #11998e, #38ef7d)",
       }}
     >
-      <div
-        className="card shadow-lg p-4"
-        style={{
-          maxWidth: "400px",
-          width: "100%",
-          borderRadius: "15px",
-          transition: "transform 0.3s, box-shadow 0.3s",
-        }}
-      >
-        <h2 className="text-center mb-4 text-success">Login</h2>
+      <div className="card p-4 shadow" style={{ width: "350px", borderRadius: "12px" }}>
+        <h3 className="text-center text-success mb-3">Login</h3>
+
         <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <input
-              type="text"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              className="form-control"
-              placeholder="Email or Account Number"
-              required
-            />
-          </div>
-          <div className="mb-3">
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              className="form-control"
-              placeholder="Password"
-              required
-            />
-          </div>
-          <button type="submit" className="btn btn-success w-100" disabled={loading}>
+          <input
+            type="text"
+            name="email"
+            placeholder="Email or Account Number"
+            className="form-control mb-3"
+            value={form.email}
+            onChange={handleChange}
+            required
+          />
+
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            className="form-control mb-3"
+            value={form.password}
+            onChange={handleChange}
+            required
+          />
+
+          <button className="btn btn-success w-100" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
-        {message && (
-          <div className="alert alert-light mt-3 text-center" role="alert">
-            {message}
-          </div>
-        )}
+
+        {msg && <div className="alert alert-light mt-3 text-center">{msg}</div>}
       </div>
     </div>
   );
