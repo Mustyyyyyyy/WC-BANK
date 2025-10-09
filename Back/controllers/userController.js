@@ -1,4 +1,4 @@
-const mongoose = require("mongoose"); // ✅ Added this line
+const mongoose = require("mongoose"); 
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
