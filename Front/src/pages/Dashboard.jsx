@@ -26,7 +26,7 @@ export default function Dashboard() {
 
   if (!user)
     return (
-      <div className="vh-100 d-flex justify-content-center align-items-center text-dark fw-bold">
+      <div className="vh-100 d-flex justify-content-center align-items-center fw-bold text-secondary">
         Loading dashboard...
       </div>
     );
@@ -44,37 +44,20 @@ export default function Dashboard() {
     <div
       className="min-vh-100"
       style={{
-        backgroundColor: "#f4f6f8",
+        backgroundColor: "#f8f9fa",
         fontFamily: "Poppins, sans-serif",
       }}
     >
       <nav
-        className="d-flex justify-content-between align-items-center px-4 py-3"
-        style={{
-          background: "rgba(255, 255, 255, 0.7)",
-          backdropFilter: "blur(10px)",
-          borderBottom: "1px solid rgba(0,0,0,0.05)",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-          position: "sticky",
-          top: 0,
-          zIndex: 1000,
-        }}
+        className="d-flex justify-content-between align-items-center px-4 py-3 bg-white shadow-sm"
+        style={{ position: "sticky", top: 0, zIndex: 1000 }}
       >
-        <h4 className="fw-bold text-dark m-0" style={{ opacity: 0.85 }}>
-          WC Bank
-        </h4>
+        <h4 className="fw-bold text-primary m-0">💳 WC Bank</h4>
         <div className="d-flex align-items-center gap-3">
-          <span className="fw-semibold text-dark" style={{ opacity: 0.85 }}>
-            {user.name}
-          </span>
+          <span className="fw-semibold text-dark">{user.name}</span>
           <motion.button
             whileTap={{ scale: 0.95 }}
-            className="btn btn-sm btn-outline-secondary"
-            style={{
-              borderRadius: "8px",
-              border: "1px solid rgba(0,0,0,0.1)",
-              opacity: 0.9,
-            }}
+            className="btn btn-sm btn-outline-danger fw-semibold"
             onClick={() => {
               localStorage.clear();
               navigate("/login");
@@ -87,17 +70,28 @@ export default function Dashboard() {
 
       <div className="container py-5">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="card shadow-sm rounded-4 p-4 mb-5 border-0"
-          style={{ backgroundColor: "#ffffff" }}
+          className="text-center mb-5"
         >
-          <h5 className="text-muted mb-1 fw-bold">Account Overview</h5>
+          <h1 className="fw-bold text-dark">Welcome, {user.name}! 👋</h1>
+          <p className="text-secondary fw-semibold mb-0">
+            Manage your finances securely and easily.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          className="card border-0 shadow-sm rounded-4 p-4 mb-5 bg-white"
+        >
+          <h5 className="text-secondary mb-1 fw-bold">Account Overview</h5>
           <h2 className="fw-bold text-dark mt-2">
             ₦{user.balance.toLocaleString()}
           </h2>
-          <p className="text-secondary mb-0 fw-semibold">
+          <p className="text-muted mb-0 fw-semibold">
             Account Number: {user.accountNumber}
           </p>
         </motion.div>
@@ -105,24 +99,28 @@ export default function Dashboard() {
         <div className="row g-4">
           {features.map((item, i) => (
             <motion.div
-              whileHover={{ scale: 1.03 }}
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.3 }}
               key={i}
               className="col-12 col-md-6 col-lg-4"
             >
               <div
                 onClick={() => navigate(item.path)}
-                className="card border-0 shadow-sm rounded-4 p-4 text-center cursor-pointer"
+                className="card border-0 rounded-4 p-4 text-center bg-white cursor-pointer shadow-sm"
                 style={{
-                  backgroundColor: "#ffffff",
-                  transition: "0.3s",
+                  transition: "all 0.3s ease-in-out",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = `0 0 15px ${item.color}55`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.05)";
                 }}
               >
                 <div
                   className="mb-3"
-                  style={{
-                    fontSize: "2rem",
-                    color: item.color,
-                  }}
+                  style={{ fontSize: "2.2rem", color: item.color }}
                 >
                   {item.icon}
                 </div>
