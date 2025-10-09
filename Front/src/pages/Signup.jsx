@@ -1,80 +1,75 @@
-import { useState } from "react";
-import axios from "axios";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import api from "../api";
 
 export default function Signup() {
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
-  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
+  const navigate = useNavigate();
 
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
-
-  const handleSubmit = async (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setMsg("");
-
     try {
-      const res = await axios.post(
-        "https://wc-2.onrender.com/api/auth/signup",
-        form
-      );
-      setMsg(res.data.message || "Signup successful!");
-      setForm({ name: "", email: "", password: "" });
+      await api.post("/auth/signup", { name, email, password });
+      setMsg("Signup successful! Redirecting to login...");
+      setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
-      setMsg(err.response?.data?.message || "Signup failed.");
-    } finally {
-      setLoading(false);
+      setMsg(err.response?.data?.message || "Signup failed");
     }
   };
 
   return (
-    <div
-      className="d-flex justify-content-center align-items-center vh-100"
-      style={{
-        background: "linear-gradient(135deg, #6a11cb, #2575fc)",
-      }}
-    >
-      <div className="card p-4 shadow" style={{ width: "350px", borderRadius: "12px" }}>
-        <h3 className="text-center text-primary mb-3">Create Account</h3>
-
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="name"
-            placeholder="Full Name"
-            className="form-control mb-3"
-            value={form.name}
-            onChange={handleChange}
-            required
-          />
-
-          <input
-            type="email"
-            name="email"
-            placeholder="Email Address"
-            className="form-control mb-3"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
-
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            className="form-control mb-3"
-            value={form.password}
-            onChange={handleChange}
-            required
-          />
-
-          <button className="btn btn-primary w-100" disabled={loading}>
-            {loading ? "Signing up..." : "Sign Up"}
+    <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
+      <div className="card p-4 shadow-sm" style={{ width: "350px" }}>
+        <h3 className="text-center mb-3">Sign Up</h3>
+        <form onSubmit={handleSignup}>
+          <div className="mb-3">
+            <label className="form-label">Full Name</label>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Enter your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Email</label>
+            <input
+              type="email"
+              className="form-control"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Password</label>
+            <input
+              type="password"
+              className="form-control"
+              placeholder="Create password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          {msg && <p className="text-center text-danger small">{msg}</p>}
+          <button type="submit" className="btn btn-success w-100">
+            Sign Up
           </button>
         </form>
 
-        {msg && <div className="alert alert-light mt-3 text-center">{msg}</div>}
+        <p className="text-center mt-3 mb-0">
+          Already have an account?{" "}
+          <Link to="/login" className="text-decoration-none">
+            Login
+          </Link>
+        </p>
       </div>
     </div>
   );

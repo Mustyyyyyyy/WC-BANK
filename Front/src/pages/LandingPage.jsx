@@ -4,67 +4,47 @@ export default function LandingPage() {
   const navigate = useNavigate();
 
   return (
-    <div
-      className="vh-100 d-flex flex-column justify-content-center align-items-center text-center text-white"
-      style={{
-        background: "linear-gradient(-45deg, #007bff, #6610f2, #17a2b8, #6610f2)",
-        backgroundSize: "400% 400%",
-        animation: "gradientMove 12s ease infinite",
-      }}
-    >
-      <style>
-        {`
-          @keyframes gradientMove {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-        `}
-      </style>
-
-      <div className="container">
-        <h1 className="fw-bold display-3 mb-3">
-          <span style={{ color: "#fff" }}>💰 WC Bank</span>
-        </h1>
-        <h5 className="mb-4 text-white-50 fst-italic">
-          Banking made simple, smart, and secure.
-        </h5>
-
+    <div className="vh-100 d-flex flex-column justify-content-center align-items-center bg-light text-center">
+      <div className="card shadow-sm p-5 border-0" style={{ maxWidth: "600px" }}>
         <div className="mb-4">
           <img
-            src="https://cdn-icons-png.flaticon.com/512/2331/2331966.png"
-            alt="Bank illustration"
-            width="140"
+            src="https://cdn-icons-png.flaticon.com/512/684/684908.png" 
+            alt="Bank icon"
+            width="100"
             className="mb-3"
           />
+          <h1 className="fw-bold text-dark mb-2">💰 WC Bank</h1>
+          <h5 className="fw-semibold text-secondary">
+            Banking made simple, smart, and secure.
+          </h5>
         </div>
 
-        <p className="lead px-4 mb-4">
-          At <b>WC Bank</b>, we redefine digital banking with speed, simplicity, and security.
-          Open an account in minutes, transfer funds instantly, buy airtime, and manage your finances
-          from anywhere in the world — all from one powerful app.
+        <p className="fw-semibold text-dark lead px-3 mb-3">
+          Welcome to <b>WC Bank</b> — your trusted digital banking partner.
+          Open an account in minutes, transfer funds securely, buy airtime, and
+          manage your money effortlessly from anywhere.
         </p>
 
-        <p className="mb-5 text-white-50">
-          Your money, your control — trusted by thousands of users globally.
+        <p className="fw-semibold text-muted mb-4">
+          Your money, your control — reliable, fast, and secure.
         </p>
 
-        <div>
+        <div className="d-flex justify-content-center gap-3">
           <button
-            className="btn btn-light btn-lg mx-2 px-4 fw-semibold"
+            className="btn btn-primary btn-lg fw-semibold px-4"
             onClick={() => navigate("/signup")}
           >
             Create Account
           </button>
           <button
-            className="btn btn-outline-light btn-lg mx-2 px-4 fw-semibold"
+            className="btn btn-outline-primary btn-lg fw-semibold px-4"
             onClick={() => navigate("/login")}
           >
             Login
           </button>
         </div>
 
-        <footer className="mt-5 small text-white-50">
+        <footer className="mt-5 small text-muted fw-semibold">
           © {new Date().getFullYear()} WC Bank — Trusted Digital Banking for Everyone.
         </footer>
       </div>

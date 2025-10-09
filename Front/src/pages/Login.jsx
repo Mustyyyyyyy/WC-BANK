@@ -1,74 +1,64 @@
-import { useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import api from "../api"; 
 
 export default function Login() {
-  const navigate = useNavigate();
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
+  const navigate = useNavigate();
 
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
-
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setMsg("");
-
     try {
-      const res = await axios.post(
-        "https://wc-2.onrender.com/api/auth/login",
-        form
-      );
-
+      const res = await api.post("/auth/login", { email, password });
       localStorage.setItem("token", res.data.token);
       setMsg("Login successful!");
       navigate("/dashboard");
     } catch (err) {
-      setMsg(err.response?.data?.message || "Login failed.");
-    } finally {
-      setLoading(false);
+      setMsg(err.response?.data?.message || "Login failed");
     }
   };
 
   return (
-    <div
-      className="d-flex justify-content-center align-items-center vh-100"
-      style={{
-        background: "linear-gradient(135deg, #11998e, #38ef7d)",
-      }}
-    >
-      <div className="card p-4 shadow" style={{ width: "350px", borderRadius: "12px" }}>
-        <h3 className="text-center text-success mb-3">Login</h3>
-
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="email"
-            placeholder="Email or Account Number"
-            className="form-control mb-3"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
-
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            className="form-control mb-3"
-            value={form.password}
-            onChange={handleChange}
-            required
-          />
-
-          <button className="btn btn-success w-100" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+    <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
+      <div className="card p-4 shadow-sm" style={{ width: "350px" }}>
+        <h3 className="text-center mb-3">Login</h3>
+        <form onSubmit={handleLogin}>
+          <div className="mb-3">
+            <label className="form-label">Email</label>
+            <input
+              type="email"
+              className="form-control"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Password</label>
+            <input
+              type="password"
+              className="form-control"
+              placeholder="Enter password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          {msg && <p className="text-center text-danger small">{msg}</p>}
+          <button type="submit" className="btn btn-primary w-100">
+            Login
           </button>
         </form>
 
-        {msg && <div className="alert alert-light mt-3 text-center">{msg}</div>}
+        <p className="text-center mt-3 mb-0">
+          Don’t have an account?{" "}
+          <Link to="/signup" className="text-decoration-none">
+            Sign up
+          </Link>
+        </p>
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+const mongoose = require("mongoose"); // ✅ Added this line
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
@@ -8,27 +9,23 @@ const generateToken = (id) =>
 
 exports.signup = async (req, res) => {
   try {
-    console.log("🔹 Signup request body:", req.body);
+    console.log("🟢 Signup request body:", req.body);
 
     const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
-      console.warn("⚠️ Missing name, email, or password");
+    if (!name || !email || !password)
       return res.status(400).json({ message: "All fields are required." });
-    }
 
-    if (mongoose.connection.readyState !== 1) {
-      console.error("❌ MongoDB not connected!");
+    if (mongoose.connection.readyState !== 1)
       return res.status(500).json({ message: "Database not connected." });
-    }
 
     const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      console.warn("⚠️ Email already registered:", email);
+    if (existingUser)
       return res.status(400).json({ message: "Email already registered." });
-    }
 
-    const accountNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+    const accountNumber = Math.floor(
+      1000000000 + Math.random() * 9000000000
+    ).toString();
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -40,19 +37,10 @@ exports.signup = async (req, res) => {
       balance: 1000,
     });
 
-    console.log("✅ User created successfully:", user.email);
+    const token = generateToken(user._id);
 
-    if (!process.env.JWT_SECRET) {
-      console.error("❌ JWT_SECRET is missing in environment variables");
-      return res.status(500).json({ message: "Server configuration error." });
-    }
-
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
-
-    try {
-      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.warn("⚠️ Email credentials missing; skipping email.");
-      } else {
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      try {
         const transporter = nodemailer.createTransport({
           service: "gmail",
           auth: {
@@ -65,7 +53,9 @@ exports.signup = async (req, res) => {
           <div style="font-family: Arial, sans-serif; padding: 20px;">
             <h2>Welcome to WC Bank, ${name}!</h2>
             <p>Your account number is <b>${accountNumber}</b> with initial balance ₦1,000.00</p>
-            <p>You can log in here: <a href="https://wc-bank-d92y.vercel.app/login">Login</a></p>
+            <p>You can log in here: 
+              <a href="https://wc-bank-d92y.vercel.app/login">Login</a>
+            </p>
           </div>
         `;
 
@@ -76,10 +66,12 @@ exports.signup = async (req, res) => {
           html: htmlContent,
         });
 
-        console.log("✅ Welcome email sent to:", email);
+        console.log(`📩 Welcome email sent to ${email}`);
+      } catch (emailErr) {
+        console.error("⚠️ Email sending failed:", emailErr.message);
       }
-    } catch (emailErr) {
-      console.error("⚠️ Failed to send welcome email:", emailErr.message);
+    } else {
+      console.warn("⚠️ Skipping email — missing credentials in .env");
     }
 
     res.status(201).json({
@@ -99,45 +91,29 @@ exports.signup = async (req, res) => {
   }
 };
 
-
 exports.login = async (req, res) => {
   try {
-    console.log("🔹 Login request body:", req.body);
+    console.log("🟢 Login request body:", req.body);
 
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      console.warn("⚠️ Missing email or password");
+    if (!email || !password)
       return res.status(400).json({ message: "All fields are required." });
-    }
 
-    if (mongoose.connection.readyState !== 1) {
-      console.error("❌ MongoDB not connected!");
+    if (mongoose.connection.readyState !== 1)
       return res.status(500).json({ message: "Database not connected." });
-    }
 
-    const user = await User.findOne({ $or: [{ email }, { accountNumber: email }] });
-    console.log("🔹 User found:", user);
+    const user = await User.findOne({
+      $or: [{ email }, { accountNumber: email }],
+    });
 
-    if (!user) {
-      console.warn("⚠️ User not found for login:", email);
+    if (!user)
       return res.status(404).json({ message: "User not found." });
-    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      console.warn("⚠️ Invalid credentials for user:", email);
+    if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials." });
-    }
 
-    if (!process.env.JWT_SECRET) {
-      console.error("❌ JWT_SECRET is missing in environment variables");
-      return res.status(500).json({ message: "Server configuration error." });
-    }
-
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
-
-    console.log("✅ Login successful for user:", email);
+    const token = generateToken(user._id);
 
     res.json({
       message: "Login successful.",
@@ -160,7 +136,8 @@ exports.login = async (req, res) => {
 exports.getDashboard = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
-    if (!user) return res.status(404).json({ message: "User not found." });
+    if (!user)
+      return res.status(404).json({ message: "User not found." });
     res.json({ user });
   } catch (err) {
     console.error("❌ Dashboard Error:", err);
@@ -171,7 +148,8 @@ exports.getDashboard = async (req, res) => {
 exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
-    if (!user) return res.status(404).json({ message: "User not found." });
+    if (!user)
+      return res.status(404).json({ message: "User not found." });
     res.json({ user });
   } catch (err) {
     console.error("❌ Profile Error:", err);
