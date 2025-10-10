@@ -1,4 +1,4 @@
-const mongoose = require("mongoose"); 
+const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
@@ -12,7 +12,6 @@ exports.signup = async (req, res) => {
     console.log("🟢 Signup request body:", req.body);
 
     const { name, email, password } = req.body;
-
     if (!name || !email || !password)
       return res.status(400).json({ message: "All fields are required." });
 
@@ -23,10 +22,7 @@ exports.signup = async (req, res) => {
     if (existingUser)
       return res.status(400).json({ message: "Email already registered." });
 
-    const accountNumber = Math.floor(
-      1000000000 + Math.random() * 9000000000
-    ).toString();
-
+    const accountNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
@@ -43,19 +39,14 @@ exports.signup = async (req, res) => {
       try {
         const transporter = nodemailer.createTransport({
           service: "gmail",
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-          },
+          auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
         });
 
         const htmlContent = `
           <div style="font-family: Arial, sans-serif; padding: 20px;">
             <h2>Welcome to WC Bank, ${name}!</h2>
             <p>Your account number is <b>${accountNumber}</b> with initial balance ₦1,000.00</p>
-            <p>You can log in here: 
-              <a href="https://wc-bank-d92y.vercel.app/login">Login</a>
-            </p>
+            <p>You can log in here: <a href="https://wc-bank-d92y.vercel.app/login">Login</a></p>
           </div>
         `;
 
@@ -93,6 +84,7 @@ exports.signup = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
+    console.log("🧠 DB state before query:", mongoose.connection.readyState);
     console.log("🟢 Login request body:", req.body);
 
     const { email, password } = req.body;
@@ -102,21 +94,23 @@ exports.login = async (req, res) => {
     if (mongoose.connection.readyState !== 1)
       return res.status(500).json({ message: "Database not connected." });
 
-    let user;
-    if (/^\d+$/.test(email)) {
-      user = await User.findOne({ accountNumber: email });
-    } else {
-      user = await User.findOne({ email });
-    }
+    const query = /^\d+$/.test(email) ? { accountNumber: email } : { email };
+    console.log("🔍 Searching by:", query);
+
+    const user = await User.findOne(query);
+    console.log("🔹 Found user:", user ? user.email : "❌ none");
 
     if (!user)
       return res.status(404).json({ message: "User not found." });
 
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log("🔑 Password match result:", isMatch);
+
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials." });
 
     const token = generateToken(user._id);
+    console.log("✅ Login successful for:", user.email);
 
     res.json({
       message: "Login successful.",
@@ -134,8 +128,6 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
-
 
 exports.getDashboard = async (req, res) => {
   try {
