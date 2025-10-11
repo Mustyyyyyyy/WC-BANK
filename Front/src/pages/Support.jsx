@@ -1,45 +1,60 @@
 import React, { useState } from "react";
 import api from "../api";
+import { Link } from "react-router-dom";
+import "animate.css";
 
 export default function Support() {
   const [message, setMessage] = useState("");
-  const [status, setStatus] = useState("");
+  const [msg, setMsg] = useState("");
 
-  const handleSupport = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setMsg("⏳ Sending...");
     try {
-      const res = await api.post("/support", { message });
-      setStatus("✅ " + res.data.message);
+      await api.post("/support", { message });
+      setMsg("✅ Support request submitted!");
       setMessage("");
     } catch (err) {
-      setStatus(err.response?.data?.message || "Error sending support request");
+      setMsg(err.response?.data?.message || "❌ Failed to send");
     }
   };
 
   return (
-    <div className="container mt-5">
-      <div className="row justify-content-center">
-        <div className="col-md-6">
-          <div className="card shadow-lg rounded-4">
-            <div className="card-body">
-              <h3 className="card-title text-center mb-4">📩 Support</h3>
-              <form onSubmit={handleSupport}>
-                <div className="mb-3">
-                  <textarea
-                    className="form-control"
-                    placeholder="Type your issue or question here..."
-                    rows="5"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    required
-                  />
-                </div>
-                <button className="btn btn-danger w-100">Send</button>
-              </form>
-              {status && <p className="mt-3 text-center text-success">{status}</p>}
-            </div>
-          </div>
-        </div>
+    <div
+      className="d-flex justify-content-center align-items-center vh-100 animate__animated animate__fadeIn"
+      style={{
+        background: "linear-gradient(135deg, #42275a, #734b6d)",
+        color: "white",
+      }}
+    >
+      <div
+        className="card p-4 shadow-lg"
+        style={{
+          width: "400px",
+          borderRadius: "20px",
+          background: "rgba(255,255,255,0.1)",
+          backdropFilter: "blur(10px)",
+        }}
+      >
+        <h3 className="text-center mb-3">💬 Contact Support</h3>
+        <form onSubmit={handleSubmit}>
+          <textarea
+            className="form-control mb-3"
+            rows="5"
+            placeholder="Describe your issue..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+          ></textarea>
+          <button className="btn btn-primary w-100 rounded-pill">
+            Send
+          </button>
+        </form>
+        <p className="mt-3 text-center text-warning">{msg}</p>
+        <p className="text-center mt-2">
+          <Link to="/dashboard" className="text-info fw-bold">
+            ← Back to Dashboard
+          </Link>
+        </p>
       </div>
     </div>
   );

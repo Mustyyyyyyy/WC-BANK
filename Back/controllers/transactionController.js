@@ -1,74 +1,99 @@
 const User = require("../models/user.model");
+const Transaction = require("../models/transaction.model");
 
-let transactions = [];
-
-exports.transfer = async (req, res) => {
+exports.transferFunds = async (req, res) => {
   try {
-    const { recipientAccount, amount } = req.body;
-    const sender = await User.findById(req.user.id);
+    const { accountNumber, amount } = req.body;
+    const senderId = req.user.id;
 
-    if (!sender) return res.status(404).json({ message: "Sender not found" });
-    if (sender.accountNumber === recipientAccount)
+    if (!accountNumber || !amount)
+      return res.status(400).json({ message: "All fields are required" });
+
+    const sender = await User.findById(senderId);
+    const receiver = await User.findOne({ accountNumber });
+
+    if (!receiver)
+      return res.status(404).json({ message: "Receiver not found" });
+
+    if (sender.accountNumber === accountNumber)
       return res.status(400).json({ message: "You cannot transfer to yourself" });
-
-    const recipient = await User.findOne({ accountNumber: recipientAccount.trim() });
-    if (!recipient) return res.status(404).json({ message: "Recipient not found" });
 
     if (sender.balance < amount)
       return res.status(400).json({ message: "Insufficient funds" });
 
     sender.balance -= amount;
-    recipient.balance += amount;
+    receiver.balance += amount;
 
     await sender.save();
-    await recipient.save();
+    await receiver.save();
 
-    res.json({ message: "Transfer successful" });
+
+    const transaction = await Transaction.create({
+      type: "transfer",
+      amount,
+      sender: sender._id,
+      receiver: receiver._id,
+      receiverAccountNumber: accountNumber,
+    });
+
+    res.json({
+      message: `Successfully transferred ₦${amount} to ${receiver.name}`,
+      transaction,
+    });
   } catch (err) {
-    console.error("❌ Transfer Error:", err);
+    console.error("Transfer Error:", err);
     res.status(500).json({ message: "Server error during transfer" });
   }
 };
 
-
-exports.airtime = async (req, res) => {
+exports.buyAirtime = async (req, res) => {
   try {
-    const { amount } = req.body;
-    const user = await User.findById(req.user.id);
+    const { amount, phoneNumber, network } = req.body;
+    const userId = req.user.id;
 
-    const airtimeAmount = Number(amount);
-    if (airtimeAmount <= 0) return res.status(400).json({ message: "Invalid amount" });
-    if (user.balance < airtimeAmount)
+    if (!amount || !phoneNumber || !network)
+      return res.status(400).json({ message: "All fields are required" });
+
+    const user = await User.findById(userId);
+
+    if (user.balance < amount)
       return res.status(400).json({ message: "Insufficient balance" });
 
-    user.balance -= airtimeAmount;
+    user.balance -= amount;
     await user.save();
 
-    const record = {
-      from: user.accountNumber,
-      to: "Airtime",
-      amount: airtimeAmount,
-      type: "Airtime",
-      date: new Date(),
-    };
-    transactions.push(record);
+    const transaction = await Transaction.create({
+      type: "airtime",
+      amount,
+      sender: user._id,
+      network,
+      phoneNumber,
+    });
 
-    res.json({ message: "Airtime purchased successfully", transaction: record });
+    res.json({
+      message: `Airtime of ₦${amount} successfully purchased for ${phoneNumber}`,
+      transaction,
+    });
   } catch (err) {
-    console.error("❌ Airtime Error:", err);
-    res.status(500).json({ message: "Server error during airtime purchase" });
+    console.error("Airtime Error:", err);
+    res.status(500).json({ message: "Server error buying airtime" });
   }
 };
 
-exports.getTransactions = async (req, res) => {
+exports.getUserTransactions = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
-    const userTransactions = transactions.filter(
-      (tx) => tx.from === user.accountNumber || tx.to === user.accountNumber
-    );
-    res.json({ transactions: userTransactions });
+    const userId = req.user.id;
+
+    const transactions = await Transaction.find({
+      $or: [{ sender: userId }, { receiver: userId }],
+    })
+      .populate("sender", "name accountNumber")
+      .populate("receiver", "name accountNumber")
+      .sort({ createdAt: -1 });
+
+    res.json(transactions);
   } catch (err) {
-    console.error("❌ Get Transactions Error:", err);
+    console.error("Get Transactions Error:", err);
     res.status(500).json({ message: "Server error fetching transactions" });
   }
 };

@@ -1,27 +1,13 @@
 body {
-  font-family: Arial, sans-serif;
-  background: #f5f6fa;
   margin: 0;
-  padding: 0;
+  font-family: "Poppins", sans-serif;
 }
-.auth, .dashboard {
-  max-width: 400px;
-  margin: 40px auto;
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+.card {
+  transition: all 0.3s ease;
 }
-.auth h2, .dashboard h2 { text-align: center; }
-.auth form, .dashboard form { display: flex; flex-direction: column; gap: 10px; }
-input, button {
-  padding: 10px; font-size: 16px;
-  border: 1px solid #ccc; border-radius: 6px;
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
 }
-button { background: #1d72b8; color: white; border: none; cursor: pointer; }
-button:disabled { background: #aaa; }
-.error { color: red; text-align: center; }
-header { text-align: center; }
-section { margin-top: 20px; }
-ul { list-style: none; padding: 0; }
-li { padding: 6px 0; border-bottom: 1px solid #eee; }

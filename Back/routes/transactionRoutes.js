@@ -1,15 +1,14 @@
 const express = require("express");
-const { protect } = require("../middleware/authMiddleware");
-const {
-  transfer,
-  airtime,
-  getTransactions,
-} = require("../controllers/transactionController");
-
 const router = express.Router();
+const {
+  transferFunds,
+  buyAirtime,
+  getUserTransactions,
+} = require("../controllers/transaction.controller");
+const { protect } = require("../middleware/authMiddleware");
 
-router.post("/transfer", protect, transfer);
-router.post("/airtime", protect, airtime);
-router.get("/history", protect, getTransactions);
+router.post("/transfer", protect, transferFunds);
+router.post("/airtime", protect, buyAirtime);
+router.get("/", protect, getUserTransactions);
 
 module.exports = router;

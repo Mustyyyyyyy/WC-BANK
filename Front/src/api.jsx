@@ -1,16 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://wc-2.onrender.com/api", 
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
+  baseURL: "https://wc-2.onrender.com/api/auth",
 });
 
 export default api;

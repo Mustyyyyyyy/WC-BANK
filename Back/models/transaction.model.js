@@ -2,17 +2,33 @@ const mongoose = require("mongoose");
 
 const transactionSchema = new mongoose.Schema(
   {
-    sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, 
-    recipient: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, 
     type: {
       type: String,
-      enum: ["fund", "airtime", "loan", "repayment", "transfer", "received"],
+      enum: ["transfer", "airtime"],
       required: true,
     },
-    amount: { type: Number, required: true },
-    date: { type: Date, default: Date.now },
-    details: { type: String, default: "" }, 
+    amount: {
+      type: Number,
+      required: true,
+    },
+    sender: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    receiver: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    receiverAccountNumber: {
+      type: Number,
+    },
+    network: {
+      type: String,
+    },
+    phoneNumber: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import api from "../api";
+import "animate.css";
 
 export default function Signup() {
   const [name, setName] = useState("");
@@ -11,62 +12,64 @@ export default function Signup() {
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    setMsg("⏳ Creating account...");
     try {
-      await api.post("/auth/signup", { name, email, password });
-      setMsg("Signup successful! Redirecting to login...");
-      setTimeout(() => navigate("/login"), 1500);
+      const res = await api.post("/signup", { name, email, password });
+      localStorage.setItem("token", res.data.token);
+      setMsg("✅ Signup successful!");
+      setTimeout(() => navigate("/dashboard"), 1000);
     } catch (err) {
-      setMsg(err.response?.data?.message || "Signup failed");
+      setMsg(err.response?.data?.message || "❌ Signup failed");
     }
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
-      <div className="card p-4 shadow-sm" style={{ width: "350px" }}>
-        <h3 className="text-center mb-3">Sign Up</h3>
+    <div
+      className="d-flex justify-content-center align-items-center vh-100"
+      style={{
+        background: "linear-gradient(135deg, #1e3c72, #2a5298)",
+        color: "white",
+      }}
+    >
+      <div
+        className="card shadow-lg p-4 animate__animated animate__fadeInUp"
+        style={{
+          width: "350px",
+          borderRadius: "20px",
+          background: "rgba(255, 255, 255, 0.1)",
+          backdropFilter: "blur(10px)",
+          color: "white",
+        }}
+      >
+        <h3 className="text-center mb-3">📝 Sign Up</h3>
         <form onSubmit={handleSignup}>
-          <div className="mb-3">
-            <label className="form-label">Full Name</label>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Enter your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-          <div className="mb-3">
-            <label className="form-label">Email</label>
-            <input
-              type="email"
-              className="form-control"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="mb-3">
-            <label className="form-label">Password</label>
-            <input
-              type="password"
-              className="form-control"
-              placeholder="Create password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          {msg && <p className="text-center text-danger small">{msg}</p>}
-          <button type="submit" className="btn btn-success w-100">
-            Sign Up
-          </button>
+          <input
+            type="text"
+            className="form-control mb-3"
+            placeholder="Full Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <input
+            type="email"
+            className="form-control mb-3"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            type="password"
+            className="form-control mb-3"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <button className="btn btn-success w-100 rounded-pill">Sign Up</button>
         </form>
-
-        <p className="text-center mt-3 mb-0">
+        <p className="mt-3 text-center text-warning">{msg}</p>
+        <p className="text-center mt-2">
           Already have an account?{" "}
-          <Link to="/login" className="text-decoration-none">
+          <Link to="/login" className="text-info fw-bold">
             Login
           </Link>
         </p>
