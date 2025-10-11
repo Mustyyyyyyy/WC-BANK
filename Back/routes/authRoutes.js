@@ -7,13 +7,16 @@ const {
   getDashboard,
   updateProfile,
   support,
-} = require("../controllers/authController");
+} = require("../controllers/userController");
+
+const { authMiddleware } = require("../middleware/authMiddleware");
 
 router.post("/signup", signup);
 router.post("/login", login);
-router.get("/me", getMe);
-router.get("/dashboard", getDashboard);
-router.put("/update-profile", updateProfile);
-router.post("/support", support);
+
+router.get("/me", authMiddleware, getMe);
+router.get("/dashboard", authMiddleware, getDashboard);
+router.put("/update-profile", authMiddleware, updateProfile);
+router.post("/support", authMiddleware, support);
 
 module.exports = router;
