@@ -13,6 +13,9 @@ app.use(express.json());
 const authRoutes = require("./routes/authRoutes");
 app.use("/api/auth", authRoutes);
 
+app.use("/api/bank", require("./routes/bank"));
+
+
 app.get("/", (req, res) => res.send("✅ API is running successfully!"));
 
 const PORT = process.env.PORT || 5000;

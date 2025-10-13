@@ -1,14 +1,8 @@
 const express = require("express");
-const router = express.Router();
-const {
-  transferFunds,
-  buyAirtime,
-  getUserTransactions,
-} = require("../controllers/transaction.controller");
+const { transfer } = require("../controllers/bankController");
 const { protect } = require("../middleware/authMiddleware");
+const router = express.Router();
 
-router.post("/transfer", protect, transferFunds);
-router.post("/airtime", protect, buyAirtime);
-router.get("/", protect, getUserTransactions);
+router.post("/transfer", protect, transfer);
 
 module.exports = router;

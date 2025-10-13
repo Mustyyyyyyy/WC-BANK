@@ -1,68 +1,31 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { FaSun, FaMoon } from "react-icons/fa";
 import api from "../api";
 
 export default function Transfer() {
-  const [recipients, setRecipients] = useState([]);
-  const [recipient, setRecipient] = useState("");
-  const [amount, setAmount] = useState("");
+  const navigate = useNavigate();
+  const [darkMode, setDarkMode] = useState(true);
+  const [transfer, setTransfer] = useState({ recipient: "", amount: "" });
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const navigate = useNavigate();
-
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await api.get("/user/users", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const loggedInUser = JSON.parse(localStorage.getItem("user"));
-        const others = res.data.users.filter((u) => u._id !== loggedInUser._id);
-        setRecipients(others);
-      } catch (err) {
-        console.error("Error fetching recipients:", err);
-        setMsg("⚠️ Unable to fetch users. Please try again.");
-      }
-    };
-
-    fetchUsers();
-  }, []);
+    const token = localStorage.getItem("token");
+    if (!token) navigate("/login");
+  }, [navigate]);
 
   const handleTransfer = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setMsg("");
-
-    if (!recipient) {
-      setMsg("❌ Please choose a recipient.");
-      setLoading(false);
-      return;
-    }
-
+    if (!transfer.recipient || !transfer.amount) return setMsg("Please fill all fields.");
     try {
+      setLoading(true);
       const token = localStorage.getItem("token");
-      const res = await api.post(
-        "/bank/transfer",
-        { recipientId: recipient, amount: Number(amount) },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      navigate("/transfer-success", {
-  state: {
-    amount,
-    recipientName: res.data.recipientName,
-    recipientAccount: res.data.recipientAccount,
-    transactionId: res.data.transactionId,
-  },
-});
-
-    } catch (err) {
-      console.error("Transfer error:", err);
-      setMsg(err.response?.data?.message || "❌ Transfer failed. Try again.");
+      await api.post("/transfer", transfer, { headers: { Authorization: `Bearer ${token}` } });
+      setMsg("✅ Transfer successful!");
+      setTransfer({ recipient: "", amount: "" });
+    } catch {
+      setMsg("❌ Transfer failed");
     } finally {
       setLoading(false);
     }
@@ -70,121 +33,112 @@ export default function Transfer() {
 
   return (
     <div
-      className="d-flex justify-content-center align-items-center min-vh-100 position-relative"
+      className="d-flex flex-column min-vh-100 align-items-center"
       style={{
-        background: "linear-gradient(135deg, #0052D4, #4364F7, #6FB1FC)",
-        overflow: "hidden",
+        background: darkMode ? "#1e1e1e" : "#f0f2f5",
+        color: darkMode ? "#f8f9fa" : "#232526",
         fontFamily: "Poppins, sans-serif",
+        padding: "2rem 1rem",
+        transition: "all 0.3s",
       }}
     >
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: [1, 1.2, 1] }}
-        transition={{ duration: 10, repeat: Infinity }}
-        className="position-absolute rounded-circle"
-        style={{
-          width: 350,
-          height: 350,
-          background: "rgba(255,255,255,0.15)",
-          top: "-10%",
-          left: "-10%",
-          filter: "blur(60px)",
-        }}
-      />
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: [1, 1.3, 1] }}
-        transition={{ duration: 12, repeat: Infinity }}
-        className="position-absolute rounded-circle"
-        style={{
-          width: 300,
-          height: 300,
-          background: "rgba(255,255,255,0.1)",
-          bottom: "-10%",
-          right: "-10%",
-          filter: "blur(60px)",
-        }}
-      />
+      <div className="mb-5 w-100 d-flex justify-content-between align-items-center" style={{ maxWidth: 500 }}>
+        <h2 className="fw-bold">💸 Transfer Funds</h2>
+        <button
+          onClick={() => setDarkMode(!darkMode)}
+          className="btn"
+          style={{
+            background: darkMode ? "#f8f9fa" : "#232526",
+            color: darkMode ? "#232526" : "#f8f9fa",
+            borderRadius: "50%",
+            width: 50,
+            height: 50,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          {darkMode ? <FaSun /> : <FaMoon />}
+        </button>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 60 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7 }}
-        className="card shadow-lg p-5 rounded-4 border-0"
+      <div
+        className="card p-4 shadow-lg w-100"
         style={{
-          width: "400px",
-          background: "rgba(255,255,255,0.95)",
-          color: "#333",
-          zIndex: 5,
+          maxWidth: 500,
+          borderRadius: 20,
+          background: darkMode ? "#2c2c2c" : "#fff",
+          color: darkMode ? "#f8f9fa" : "#232526",
+          boxShadow: darkMode ? "0 8px 32px rgba(0,0,0,0.4)" : "0 8px 32px rgba(0,0,0,0.1)",
         }}
       >
-        <h4 className="fw-bold text-center text-primary mb-4">
-          💸 Transfer Funds
-        </h4>
-
         <form onSubmit={handleTransfer}>
           <div className="mb-3">
-            <label className="form-label fw-semibold">Recipient</label>
-            <select
-              className="form-select p-3 fw-semibold rounded-3"
-              value={recipient}
-              onChange={(e) => setRecipient(e.target.value)}
-              required
-            >
-              <option value="">-- Select recipient --</option>
-              {recipients.map((user) => (
-                <option key={user._id} value={user._id}>
-                  {user.name} | {user.accountNumber}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label fw-semibold">Amount (₦)</label>
+            <label className="form-label fw-semibold">Recipient Account</label>
             <input
-              type="number"
-              className="form-control p-3 fw-semibold rounded-3"
-              placeholder="e.g. 5000"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              required
-              min="1"
+              type="text"
+              placeholder="Account Number"
+              value={transfer.recipient}
+              onChange={(e) => setTransfer({ ...transfer, recipient: e.target.value })}
+              className="form-control"
+              style={{
+                borderRadius: 10,
+                background: darkMode ? "#232526" : "#f8f9fa",
+                color: darkMode ? "#fff" : "#232526",
+                border: "1.5px solid #36b9cc",
+              }}
             />
           </div>
-
-          {msg && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className={`text-center fw-bold ${
-                msg.startsWith("✅") ? "text-success" : "text-danger"
-              }`}
-            >
-              {msg}
-            </motion.p>
-          )}
-
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            disabled={loading}
-            className="btn w-100 fw-bold py-2 rounded-3"
+          <div className="mb-3">
+            <label className="form-label fw-semibold">Amount</label>
+            <input
+              type="number"
+              placeholder="Enter amount"
+              value={transfer.amount}
+              onChange={(e) => setTransfer({ ...transfer, amount: e.target.value })}
+              className="form-control"
+              style={{
+                borderRadius: 10,
+                background: darkMode ? "#232526" : "#f8f9fa",
+                color: darkMode ? "#fff" : "#232526",
+                border: "1.5px solid #36b9cc",
+              }}
+            />
+          </div>
+          <button
+            type="submit"
+            className="btn w-100 fw-bold"
             style={{
-              background: "linear-gradient(90deg, #007bff, #00c6ff)",
-              color: "white",
+              background: "#36b9cc",
+              color: "#fff",
+              borderRadius: 10,
+              padding: "10px",
+              fontSize: "1.1rem",
+              boxShadow: "0 2px 8px rgba(54,185,204,0.18)",
+            }}
+            disabled={loading}
+          >
+            Send
+          </button>
+        </form>
+        {msg && <div className="mt-3 text-center">{msg}</div>}
+
+        <Link to="/dashboard" style={{ textDecoration: "none" }}>
+          <button
+            className="btn w-100 mt-3 fw-bold"
+            style={{
+              background: darkMode ? "#4e73df" : "#232526",
+              color: "#fff",
+              borderRadius: 10,
+              padding: "10px",
+              fontSize: "1.1rem",
+              boxShadow: "0 2px 8px rgba(78,115,223,0.2)",
             }}
           >
-            {loading ? "Processing..." : "Send Money"}
-          </motion.button>
-        </form>
-
-        <button
-          onClick={() => navigate("/dashboard")}
-          className="btn btn-outline-dark w-100 mt-3 fw-semibold"
-        >
-          ← Back to Dashboard
-        </button>
-      </motion.div>
+            ⬅ Back to Dashboard
+          </button>
+        </Link>
+      </div>
     </div>
   );
 }

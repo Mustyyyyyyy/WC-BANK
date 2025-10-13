@@ -7,22 +7,27 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setMsg("⏳ Logging in...");
+    setMsg("");
+    setLoading(true);
 
     try {
-      console.log("🟢 Sending login request with:", { email, password });
-      const res = await api.post("/login", { email, password }); 
+      const res = await api.post("/login", { email, password });
+
       localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      localStorage.setItem("user", JSON.stringify(res.data));
+
       setMsg("✅ Login successful!");
-      setTimeout(() => navigate("/dashboard"), 1000);
+      setTimeout(() => navigate("/dashboard"), 500);
     } catch (err) {
       console.error("❌ Login Error:", err.response?.data || err.message);
       setMsg(err.response?.data?.message || "❌ Login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -49,27 +54,19 @@ export default function Login() {
         </h2>
 
         <form onSubmit={handleLogin}>
-          <label className="form-label fw-semibold" style={{ fontSize: "1.1rem" }}>
-            Email Address
-          </label>
+          <label className="form-label fw-semibold">Email Address</label>
           <input
             type="email"
-            className="form-control mb-4 p-3"
+            className="form-control mb-3 p-3"
             placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{
-              fontSize: "1.1rem",
-              borderRadius: "12px",
-              border: "none",
-              outline: "none",
-            }}
+            disabled={loading}
+            style={{ borderRadius: "12px", border: "none" }}
           />
 
-          <label className="form-label fw-semibold" style={{ fontSize: "1.1rem" }}>
-            Password
-          </label>
+          <label className="form-label fw-semibold">Password</label>
           <input
             type="password"
             className="form-control mb-4 p-3"
@@ -77,29 +74,26 @@ export default function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            style={{
-              fontSize: "1.1rem",
-              borderRadius: "12px",
-              border: "none",
-            }}
+            disabled={loading}
+            style={{ borderRadius: "12px", border: "none" }}
           />
 
           <button
+            type="submit"
             className="btn btn-primary w-100 py-3 rounded-pill fw-bold"
-            style={{ fontSize: "1.2rem", background: "#007BFF", border: "none" }}
+            disabled={loading}
           >
-            Login
+            {loading ? "⏳ Logging in..." : "Login"}
           </button>
         </form>
 
-        <p
-          className="mt-3 text-center"
-          style={{ color: "#FFD700", fontWeight: "500" }}
-        >
-          {msg}
-        </p>
+        {msg && (
+          <p className="mt-3 text-center" style={{ color: msg.startsWith("✅") ? "#1cc88a" : "#FFD700" }}>
+            {msg}
+          </p>
+        )}
 
-        <p className="text-center mt-3" style={{ fontSize: "1rem" }}>
+        <p className="text-center mt-3">
           Don’t have an account?{" "}
           <Link to="/signup" className="text-info fw-bold">
             Sign up here

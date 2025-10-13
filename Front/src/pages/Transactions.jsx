@@ -1,96 +1,115 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import api from "../api";
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) return navigate("/login");
-
-        const res = await api.get("/transactions", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setTransactions(res.data.transactions || []);
-      } catch (err) {
-        console.error("❌ Error fetching transactions:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTransactions();
-  }, [navigate]);
-
-  if (loading)
-    return (
-      <div className="vh-100 d-flex justify-content-center align-items-center text-dark">
-        Loading transactions...
-      </div>
-    );
+    const stored = JSON.parse(localStorage.getItem("transactions")) || [];
+    setTransactions(stored.reverse());
+  }, []);
 
   return (
     <div
-      className="min-vh-100"
+      className="min-vh-100 text-white d-flex flex-column align-items-center"
       style={{
-        background: "linear-gradient(120deg, #0f2027, #203a43, #2c5364)",
+        background: "linear-gradient(135deg, #0F2027, #203A43, #2C5364)",
         fontFamily: "Poppins, sans-serif",
+        padding: "20px",
       }}
     >
-      <div className="container py-5">
+      <h2 className="fw-bold mb-4 mt-3">Transaction History</h2>
+
+      {transactions.length === 0 ? (
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="card bg-white text-dark rounded-4 shadow-lg p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center mt-5"
         >
-          <h3 className="fw-bold mb-4 text-center">🧾 Transaction History</h3>
-
-          {transactions.length === 0 ? (
-            <p className="text-muted text-center">No transactions yet.</p>
-          ) : (
-            <ul className="list-group list-group-flush">
-              {transactions.map((tx, i) => (
-                <motion.li
-                  key={i}
-                  className="list-group-item d-flex justify-content-between align-items-center"
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                >
-                  <div>
-                    <strong>{tx.type}</strong>
-                    <p className="small text-muted mb-0">
-                      {new Date(tx.date).toLocaleString()}
-                    </p>
-                  </div>
-                  <span
-                    className={`fw-bold ${
-                      tx.type === "Credit" ? "text-success" : "text-danger"
-                    }`}
-                  >
-                    {tx.type === "Credit" ? "+" : "-"}₦{tx.amount.toLocaleString()}
-                  </span>
-                </motion.li>
-              ))}
-            </ul>
-          )}
-
-          <motion.button
-            whileTap={{ scale: 0.97 }}
-            className="btn btn-outline-light w-100 mt-4"
+          <p>No transactions found yet.</p>
+          <button
             onClick={() => navigate("/dashboard")}
+            className="btn btn-light mt-3 fw-semibold rounded-3"
           >
             Back to Dashboard
-          </motion.button>
+          </button>
         </motion.div>
-      </div>
+      ) : (
+        <motion.div
+          className="w-100"
+          style={{ maxWidth: "700px" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          {transactions.map((tx, index) => (
+            <motion.div
+              key={index}
+              className="card mb-3 shadow-sm border-0 rounded-4"
+              style={{
+                background: "rgba(255,255,255,0.95)",
+                color: "#333",
+              }}
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: index * 0.05 }}
+            >
+              <div className="card-body">
+                <div className="d-flex justify-content-between align-items-center">
+                  <h5 className="fw-bold mb-1">{tx.recipient}</h5>
+                  <h5
+                    className={`fw-bold ${
+                      tx.status === "Successful"
+                        ? "text-success"
+                        : tx.status === "Pending"
+                        ? "text-warning"
+                        : "text-danger"
+                    }`}
+                  >
+                    ₦{tx.amount?.toLocaleString()}
+                  </h5>
+                </div>
+
+                <p className="mb-1 small">
+                  <strong>Date:</strong> {tx.date}
+                </p>
+                <p className="mb-1 small">
+                  <strong>Reference:</strong> {tx.reference}
+                </p>
+                <p className="small">
+                  <strong>Status:</strong>{" "}
+                  <span
+                    className={
+                      tx.status === "Successful"
+                        ? "text-success fw-semibold"
+                        : tx.status === "Pending"
+                        ? "text-warning fw-semibold"
+                        : "text-danger fw-semibold"
+                    }
+                  >
+                    {tx.status}
+                  </span>
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
+
+      <button
+        onClick={() => navigate("/dashboard")}
+        className="btn btn-dark w-75 mt-4 fw-semibold rounded-3"
+      >
+        ← Back to Dashboard
+      </button>
+
+      <footer className="text-center py-4 mt-4">
+        <p className="small mb-0 text-light">
+          WorldChampions Bank — Secure • Fast • Reliable
+        </p>
+      </footer>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-const User = require("../models/user");
+const User = require("../models/user.model");
 
 async function pushTransaction(user, type, amount, details) {
   user.transactions.push({ type, amount, details });
@@ -86,38 +86,49 @@ exports.saveMoney = async (req, res) => {
 };
 
 
+
+const sender = require("../models/user.model");
+
 exports.transfer = async (req, res) => {
   try {
-    const { toAccountNumber, amount } = req.body;
-    if (!toAccountNumber || !amount || amount <= 0)
-      return res.status(400).json({ message: "Invalid input" });
+    const senderId = req.user.id; 
+    const { recipientId, amount } = req.body;
 
-    const fromUser = await User.findById(req.userId);
-    if (!fromUser) return res.status(404).json({ message: "User not found" });
+    if (!recipientId || !amount || amount <= 0) {
+      return res.status(400).json({ message: "Invalid transfer details." });
+    }
 
-    if (fromUser.accountNumber === toAccountNumber)
-      return res.status(400).json({ message: "Cannot transfer to same account" });
+    const sender = await User.findById(senderId);
+    const recipient = await User.findById(recipientId);
 
-    if (fromUser.balance < amount) return res.status(400).json({ message: "Insufficient funds" });
+    if (!sender || !recipient) {
+      return res.status(404).json({ message: "User not found." });
+    }
 
-    const toUser = await User.findOne({ accountNumber: toAccountNumber });
-    if (!toUser) return res.status(404).json({ message: "Recipient not found" });
+    if (sender.balance < amount) {
+      return res
+        .status(400)
+        .json({ message: "Insufficient funds for this transfer." });
+    }
 
-    fromUser.balance -= Number(amount);
-    fromUser.transactions.push({ type: "transfer", amount: Number(amount), details: `Transfer to ${toAccountNumber}` });
+    sender.balance -= amount;
+    recipient.balance += amount;
 
-    toUser.balance += Number(amount);
-    toUser.transactions.push({ type: "transfer", amount: Number(amount), details: `Received from ${fromUser.accountNumber}` });
+    await sender.save();
+    await recipient.save();
 
-    await fromUser.save();
-    await toUser.save();
-
-    return res.json({ message: "Transfer successful", balance: fromUser.balance });
+    res.json({
+      message: "✅ Transfer successful!",
+      senderBalance: sender.balance,
+      recipientName: recipient.name,
+      amount,
+    });
   } catch (err) {
-    console.error("Transfer Error:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Transfer error:", err);
+    res.status(500).json({ message: "Server error during transfer." });
   }
 };
+
 
 
 exports.getTransactions = async (req, res) => {
@@ -129,6 +140,56 @@ exports.getTransactions = async (req, res) => {
     res.json(tx);
   } catch (err) {
     console.error("Transactions Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+exports.getDashboard = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      user: {
+        name: user.name,
+        email: user.email,
+        accountNumber: user.accountNumber,
+        balance: user.balance,
+        savings: user.savings || 0,
+      },
+    });
+  } catch (err) {
+    console.error("Dashboard Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.findUserByAccountNumber = async (req, res) => {
+  try {
+    const { accountNumber } = req.params;
+
+    if (!accountNumber || isNaN(accountNumber)) {
+      return res.status(400).json({ message: "Invalid account number format" });
+    }
+
+    const user = await User.findOne({ accountNumber: Number(accountNumber) }).select(
+      "-password"
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user._id.toString() === req.userId.toString()) {
+      return res.status(400).json({ message: "You cannot send money to yourself" });
+    }
+
+    res.json({ user });
+  } catch (err) {
+    console.error("Find User Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };

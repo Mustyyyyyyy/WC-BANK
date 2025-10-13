@@ -1,25 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const User = require("../models/user.model");
+const { protect } = require("../middleware/authMiddleware");
 
-function authMiddleware(req, res, next) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ message: "No token provided" });
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.userId = decoded.id;
-    next();
-  } catch {
-    return res.status(401).json({ message: "Invalid token" });
-  }
-}
-
-router.post("/fund", authMiddleware, async (req, res) => {
+router.post("/fund", protect, async (req, res) => {
   try {
     const { amount } = req.body;
-    if (!amount || amount <= 0) return res.status(400).json({ message: "Invalid amount" });
+    if (!amount || amount <= 0)
+      return res.status(400).json({ message: "Invalid amount" });
 
     const user = await User.findById(req.userId);
     user.balance += amount;
@@ -32,16 +21,22 @@ router.post("/fund", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/airtime", authMiddleware, async (req, res) => {
+router.post("/airtime", protect, async (req, res) => {
   try {
     const { amount } = req.body;
     const user = await User.findById(req.userId);
 
-    if (!amount || amount <= 0) return res.status(400).json({ message: "Invalid amount" });
-    if (user.balance < amount) return res.status(400).json({ message: "Insufficient funds" });
+    if (!amount || amount <= 0)
+      return res.status(400).json({ message: "Invalid amount" });
+    if (user.balance < amount)
+      return res.status(400).json({ message: "Insufficient funds" });
 
     user.balance -= amount;
-    user.transactions.push({ type: "airtime", amount, details: "Airtime purchase" });
+    user.transactions.push({
+      type: "airtime",
+      amount,
+      details: "Airtime purchase",
+    });
     await user.save();
 
     res.json({ message: "Airtime purchased", balance: user.balance });
@@ -50,10 +45,11 @@ router.post("/airtime", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/loan", authMiddleware, async (req, res) => {
+router.post("/loan", protect, async (req, res) => {
   try {
     const { amount } = req.body;
-    if (!amount || amount <= 0) return res.status(400).json({ message: "Invalid amount" });
+    if (!amount || amount <= 0)
+      return res.status(400).json({ message: "Invalid amount" });
 
     const user = await User.findById(req.userId);
     user.loans.push({ amount, status: "approved" });
@@ -67,26 +63,32 @@ router.post("/loan", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/savings", authMiddleware, async (req, res) => {
+router.post("/savings", protect, async (req, res) => {
   try {
     const { amount } = req.body;
     const user = await User.findById(req.userId);
 
-    if (!amount || amount <= 0) return res.status(400).json({ message: "Invalid amount" });
-    if (user.balance < amount) return res.status(400).json({ message: "Insufficient funds" });
+    if (!amount || amount <= 0)
+      return res.status(400).json({ message: "Invalid amount" });
+    if (user.balance < amount)
+      return res.status(400).json({ message: "Insufficient funds" });
 
     user.balance -= amount;
     user.savings += amount;
     user.transactions.push({ type: "savings", amount, details: "Money saved" });
     await user.save();
 
-    res.json({ message: "Money saved", savings: user.savings, balance: user.balance });
+    res.json({
+      message: "Money saved",
+      savings: user.savings,
+      balance: user.balance,
+    });
   } catch {
     res.status(500).json({ message: "Server error" });
   }
 });
 
-router.get("/transactions", authMiddleware, async (req, res) => {
+router.get("/transactions", protect, async (req, res) => {
   try {
     const user = await User.findById(req.userId);
     res.json(user.transactions.reverse());
@@ -95,7 +97,66 @@ router.get("/transactions", authMiddleware, async (req, res) => {
   }
 });
 
+router.get("/find/:accountNumber", protect, async (req, res) => {
+  try {
+    const recipient = await User.findOne({
+      accountNumber: req.params.accountNumber,
+    }).select("name email accountNumber");
+
+    if (!recipient)
+      return res.status(404).json({ message: "Account not found" });
+
+    res.json({ user: recipient });
+  } catch (err) {
+    console.error("Find user error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.post("/transfer", protect, async (req, res) => {
+  try {
+    const { recipientId, amount } = req.body;
+
+    if (!recipientId || !amount || amount <= 0)
+      return res.status(400).json({ message: "Invalid transfer details" });
+
+    const sender = await User.findById(req.userId);
+    const recipient = await User.findById(recipientId);
+
+    if (!sender || !recipient)
+      return res.status(404).json({ message: "User not found" });
+
+    if (sender.balance < amount)
+      return res.status(400).json({ message: "Insufficient balance" });
+
+    sender.balance -= amount;
+    recipient.balance += amount;
+
+    sender.transactions.push({
+      type: "transfer",
+      amount,
+      details: `Sent to ${recipient.name} (${recipient.accountNumber})`,
+    });
+
+    recipient.transactions.push({
+      type: "transfer",
+      amount,
+      details: `Received from ${sender.name} (${sender.accountNumber})`,
+    });
+
+    await sender.save();
+    await recipient.save();
+
+    res.json({
+      message: "Transfer successful",
+      senderBalance: sender.balance,
+      recipientName: recipient.name,
+      amount,
+    });
+  } catch (err) {
+    console.error("Transfer Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;
-
-
-

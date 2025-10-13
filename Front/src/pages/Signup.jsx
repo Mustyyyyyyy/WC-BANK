@@ -8,22 +8,27 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    setMsg("⏳ Creating your account...");
+    setMsg("");
+    setLoading(true);
 
     try {
-      console.log("🟢 Sending signup data:", { name, email, password });
       const res = await api.post("/signup", { name, email, password });
+
       localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      setMsg("✅ Account created successfully!");
-      setTimeout(() => navigate("/dashboard"), 1000);
+      localStorage.setItem("user", JSON.stringify(res.data));
+
+      setMsg("✅ Signup successful!");
+      setTimeout(() => navigate("/dashboard"), 500);
     } catch (err) {
       console.error("❌ Signup Error:", err.response?.data || err.message);
       setMsg(err.response?.data?.message || "❌ Signup failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -31,7 +36,7 @@ export default function Signup() {
     <div
       className="d-flex justify-content-center align-items-center vh-100"
       style={{
-        background: "linear-gradient(135deg, #2C5364, #203A43, #0F2027)",
+        background: "linear-gradient(135deg, #141E30, #243B55)",
         color: "white",
       }}
     >
@@ -45,48 +50,34 @@ export default function Signup() {
           color: "white",
         }}
       >
-        <h2 className="text-center mb-4 fw-bold" style={{ fontSize: "2rem" }}>
-          📝 Create Account
-        </h2>
+        <h2 className="text-center mb-4 fw-bold">📝 Create Account</h2>
 
         <form onSubmit={handleSignup}>
-          <label className="form-label fw-semibold" style={{ fontSize: "1.1rem" }}>
-            Full Name
-          </label>
+          <label className="form-label fw-semibold">Full Name</label>
           <input
             type="text"
-            className="form-control mb-4 p-3"
+            className="form-control mb-3 p-3"
             placeholder="Enter your name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            style={{
-              fontSize: "1.1rem",
-              borderRadius: "12px",
-              border: "none",
-            }}
+            disabled={loading}
+            style={{ borderRadius: "12px", border: "none" }}
           />
 
-          <label className="form-label fw-semibold" style={{ fontSize: "1.1rem" }}>
-            Email Address
-          </label>
+          <label className="form-label fw-semibold">Email Address</label>
           <input
             type="email"
-            className="form-control mb-4 p-3"
+            className="form-control mb-3 p-3"
             placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{
-              fontSize: "1.1rem",
-              borderRadius: "12px",
-              border: "none",
-            }}
+            disabled={loading}
+            style={{ borderRadius: "12px", border: "none" }}
           />
 
-          <label className="form-label fw-semibold" style={{ fontSize: "1.1rem" }}>
-            Password
-          </label>
+          <label className="form-label fw-semibold">Password</label>
           <input
             type="password"
             className="form-control mb-4 p-3"
@@ -94,29 +85,22 @@ export default function Signup() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            style={{
-              fontSize: "1.1rem",
-              borderRadius: "12px",
-              border: "none",
-            }}
+            disabled={loading}
+            style={{ borderRadius: "12px", border: "none" }}
           />
 
-          <button
-            className="btn btn-success w-100 py-3 rounded-pill fw-bold"
-            style={{ fontSize: "1.2rem", background: "#28a745", border: "none" }}
-          >
-            Sign Up
+          <button type="submit" className="btn btn-success w-100 py-3 rounded-pill fw-bold" disabled={loading}>
+            {loading ? "⏳ Creating account..." : "Sign Up"}
           </button>
         </form>
 
-        <p
-          className="mt-3 text-center"
-          style={{ color: "#FFD700", fontWeight: "500" }}
-        >
-          {msg}
-        </p>
+        {msg && (
+          <p className="mt-3 text-center" style={{ color: msg.startsWith("✅") ? "#1cc88a" : "#FFD700" }}>
+            {msg}
+          </p>
+        )}
 
-        <p className="text-center mt-3" style={{ fontSize: "1rem" }}>
+        <p className="text-center mt-3">
           Already have an account?{" "}
           <Link to="/login" className="text-info fw-bold">
             Login here

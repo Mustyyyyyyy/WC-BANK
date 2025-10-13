@@ -1,91 +1,138 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, useLocation } from "react-router-dom";
-import Confetti from "react-confetti";
+import { useLocation, useNavigate } from "react-router-dom";
+import api from "../api";
 
 export default function TransferSuccess() {
+  const { state } = useLocation();
   const navigate = useNavigate();
-  const location = useLocation();
-  const data = location.state || {};
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      document.querySelector("#confetti")?.remove();
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, []);
+    const fetchUserBalance = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return navigate("/login");
 
-  if (!data.amount || !data.recipientName) {
-    navigate("/dashboard");
-    return null;
-  }
+        const res = await api.get("/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        localStorage.setItem("user", JSON.stringify(res.data));
+        setUser(res.data);
+        setLoading(false);
+
+        if (state?.recipientName && state?.amount) {
+          const newTransaction = {
+            recipient: state.recipientName,
+            amount: state.amount,
+            date: new Date().toLocaleString("en-NG", { hour12: true }),
+            reference:
+              state.transactionRef ||
+              "WC" + Math.floor(100000000 + Math.random() * 900000000),
+            status: "Successful",
+          };
+
+          const existing = JSON.parse(localStorage.getItem("transactions")) || [];
+          existing.push(newTransaction);
+          localStorage.setItem("transactions", JSON.stringify(existing));
+        }
+      } catch (err) {
+        console.error("Error fetching updated balance:", err);
+        setLoading(false);
+      }
+    };
+
+    fetchUserBalance();
+  }, [navigate, state]);
+
+  if (loading)
+    return (
+      <div className="vh-100 d-flex justify-content-center align-items-center text-white">
+        <h5>Loading transaction details...</h5>
+      </div>
+    );
+
+  const transactionRef =
+    state?.transactionRef ||
+    "WC" + Math.floor(100000000 + Math.random() * 900000000);
+  const transactionDate =
+    state?.date || new Date().toLocaleString("en-NG", { hour12: true });
 
   return (
     <div
-      className="d-flex justify-content-center align-items-center vh-100"
+      className="min-vh-100 d-flex flex-column justify-content-center align-items-center text-center"
       style={{
-        background: "linear-gradient(135deg, #1CB5E0, #000851)",
-        fontFamily: "Poppins, sans-serif",
+        background: "linear-gradient(135deg, #0F2027, #203A43, #2C5364)",
         color: "white",
-        position: "relative",
-        overflow: "hidden",
+        fontFamily: "Poppins, sans-serif",
       }}
     >
-      <Confetti numberOfPieces={300} recycle={false} id="confetti" />
-
       <motion.div
-        initial={{ opacity: 0, scale: 0.7 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6 }}
-        className="card p-5 text-center shadow-lg rounded-4 border-0"
+        className="card p-4 rounded-4 border-0 shadow-lg"
         style={{
-          width: "400px",
-          background: "rgba(255, 255, 255, 0.95)",
-          color: "#222",
+          background: "rgba(255,255,255,0.97)",
+          color: "#333",
+          maxWidth: "480px",
+          width: "90%",
         }}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
       >
         <motion.div
           initial={{ scale: 0 }}
-          animate={{ scale: [1, 1.3, 1] }}
-          transition={{ duration: 0.8 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.3 }}
+          style={{ fontSize: "3.5rem", color: "green" }}
         >
-          <span style={{ fontSize: "3rem" }}>✅</span>
+          ✅
         </motion.div>
 
-        <h4 className="fw-bold mt-3 text-success">Transfer Successful!</h4>
-        <p className="mt-2 text-secondary">
-          Your transaction has been completed.
+        <h3 className="fw-bold mt-3">Transfer Successful!</h3>
+        <p className="text-success fw-bold fs-5">
+          ₦{state?.amount?.toLocaleString()}
+        </p>
+        <p className="fw-semibold mb-3">
+          Sent to <span className="text-primary">{state?.recipientName}</span>
         </p>
 
-        <div
-          className="mt-4 p-3 rounded-4"
-          style={{ background: "#f1f5f9", color: "#333" }}
-        >
-          <p className="mb-1">
-            <strong>Recipient:</strong> {data.recipientName}
+        <hr />
+        <div className="text-start mb-3">
+          <p className="mb-1 fw-semibold">
+            <strong>Status:</strong>{" "}
+            <span className="text-success">Successful ✅</span>
           </p>
-          <p className="mb-1">
-            <strong>Account Number:</strong> {data.recipientAccount}
+          <p className="mb-1 fw-semibold">
+            <strong>Date:</strong> {transactionDate}
           </p>
-          <p className="mb-1">
-            <strong>Amount:</strong> ₦{Number(data.amount).toLocaleString()}
-          </p>
-          <p className="mb-0">
-            <strong>Transaction ID:</strong> {data.transactionId || "N/A"}
+          <p className="mb-1 fw-semibold">
+            <strong>Reference:</strong> {transactionRef}
           </p>
         </div>
 
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          className="btn mt-4 w-100 fw-bold text-white"
-          style={{
-            background: "linear-gradient(90deg, #007bff, #00c6ff)",
-          }}
+        <h5 className="fw-bold mt-3">Updated Balance</h5>
+        <h3 className="text-success fw-bold">
+          ₦{user?.balance?.toLocaleString() || "0"}
+        </h3>
+
+        <button
           onClick={() => navigate("/dashboard")}
+          className="btn btn-dark w-100 mt-4 fw-semibold rounded-3"
         >
-          Go to Dashboard
-        </motion.button>
+          ← Back to Dashboard
+        </button>
       </motion.div>
+
+      <footer className="text-center py-4 mt-4">
+        <p className="mb-0 small text-light">
+          WorldChampions Bank — Secure • Fast • Reliable
+        </p>
+        <p className="small text-light mb-0">
+          © 2025 WorldChampions. All rights reserved.
+        </p>
+      </footer>
     </div>
   );
 }

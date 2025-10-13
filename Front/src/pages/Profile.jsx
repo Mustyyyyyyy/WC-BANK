@@ -1,145 +1,149 @@
-import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { FaSun, FaMoon } from "react-icons/fa";
 import api from "../api";
 
 export default function Profile() {
-  const [user, setUser] = useState(null);
-  const [profilePic, setProfilePic] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const [darkMode, setDarkMode] = useState(true);
+  const [user, setUser] = useState({ name: "", email: "" });
   const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await api.get("/auth/me", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        setUser(res.data.user);
-        setProfilePic(res.data.user.profilePic || "");
-      } catch (err) {
-        console.error("Error fetching profile", err);
-      }
-    };
-    fetchProfile();
-  }, []);
+    const token = localStorage.getItem("token");
+    if (!token) navigate("/login");
 
-  const handlePicUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setLoading(true);
-    setMsg("");
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (storedUser) setUser(storedUser);
+  }, [navigate]);
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    if (!user.name || !user.email) return setMsg("Please fill all fields.");
 
     try {
-      // Simulate upload. In real app, you’d POST to backend /api/auth/upload
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfilePic(reader.result);
-        setMsg("✅ Profile picture updated!");
-      };
-      reader.readAsDataURL(file);
-    } catch (err) {
-      console.error(err);
-      setMsg("❌ Failed to upload picture");
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const res = await api.put("/me", user, { headers: { Authorization: `Bearer ${token}` } });
+      setUser(res.data);
+      localStorage.setItem("user", JSON.stringify(res.data));
+      setMsg("✅ Profile updated!");
+    } catch {
+      setMsg("❌ Failed to update profile");
     } finally {
       setLoading(false);
     }
   };
 
-  if (!user)
-    return (
-      <p className="text-center mt-5 text-white">Loading profile...</p>
-    );
-
   return (
     <div
-      className="min-vh-100 d-flex justify-content-center align-items-center"
+      className="d-flex flex-column min-vh-100 align-items-center"
       style={{
-        background: "linear-gradient(135deg, #0f2027, #203a43, #2c5364)",
+        background: darkMode ? "#1e1e1e" : "#f0f2f5",
+        color: darkMode ? "#f8f9fa" : "#232526",
         fontFamily: "Poppins, sans-serif",
-        padding: "2rem",
+        padding: "2rem 1rem",
+        transition: "all 0.3s",
       }}
     >
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="card shadow-lg rounded-4 p-5"
-        style={{ maxWidth: "450px", width: "100%", background: "white" }}
+      <div className="mb-5 w-100 d-flex justify-content-between align-items-center" style={{ maxWidth: 500 }}>
+        <h2 className="fw-bold">👤 Profile</h2>
+        <button
+          onClick={() => setDarkMode(!darkMode)}
+          className="btn"
+          style={{
+            background: darkMode ? "#f8f9fa" : "#232526",
+            color: darkMode ? "#232526" : "#f8f9fa",
+            borderRadius: "50%",
+            width: 50,
+            height: 50,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          {darkMode ? <FaSun /> : <FaMoon />}
+        </button>
+      </div>
+
+      <div
+        className="card p-4 shadow-lg w-100"
+        style={{
+          maxWidth: 500,
+          borderRadius: 20,
+          background: darkMode ? "#2c2c2c" : "#fff",
+          color: darkMode ? "#f8f9fa" : "#232526",
+          boxShadow: darkMode ? "0 8px 32px rgba(0,0,0,0.4)" : "0 8px 32px rgba(0,0,0,0.1)",
+        }}
       >
-        <div className="text-center mb-4">
-          <div
-            className="rounded-circle overflow-hidden mx-auto mb-3"
+        <form onSubmit={handleProfileUpdate}>
+          <div className="mb-3">
+            <label className="form-label fw-semibold">Name</label>
+            <input
+              type="text"
+              placeholder="Your Name"
+              value={user.name}
+              onChange={(e) => setUser({ ...user, name: e.target.value })}
+              className="form-control"
+              style={{
+                borderRadius: 10,
+                background: darkMode ? "#232526" : "#f8f9fa",
+                color: darkMode ? "#fff" : "#232526",
+                border: "1.5px solid #1cc88a",
+              }}
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label fw-semibold">Email</label>
+            <input
+              type="email"
+              placeholder="Your Email"
+              value={user.email}
+              onChange={(e) => setUser({ ...user, email: e.target.value })}
+              className="form-control"
+              style={{
+                borderRadius: 10,
+                background: darkMode ? "#232526" : "#f8f9fa",
+                color: darkMode ? "#fff" : "#232526",
+                border: "1.5px solid #1cc88a",
+              }}
+            />
+          </div>
+          <button
+            type="submit"
+            className="btn w-100 fw-bold"
             style={{
-              width: "120px",
-              height: "120px",
-              background: "#f0f0f0",
+              background: "#1cc88a",
+              color: darkMode ? "#232526" : "#fff",
+              borderRadius: 10,
+              padding: "10px",
+              fontSize: "1.1rem",
+              boxShadow: "0 2px 8px rgba(28,200,138,0.18)",
+            }}
+            disabled={loading}
+          >
+            Save Changes
+          </button>
+        </form>
+        {msg && <div className="mt-3 text-center">{msg}</div>}
+
+        <Link to="/dashboard" style={{ textDecoration: "none" }}>
+          <button
+            className="btn w-100 mt-3 fw-bold"
+            style={{
+              background: darkMode ? "#4e73df" : "#232526",
+              color: "#fff",
+              borderRadius: 10,
+              padding: "10px",
+              fontSize: "1.1rem",
+              boxShadow: "0 2px 8px rgba(78,115,223,0.2)",
             }}
           >
-            {profilePic ? (
-              <img
-                src={profilePic}
-                alt="Profile"
-                className="w-100 h-100"
-                style={{ objectFit: "cover" }}
-              />
-            ) : (
-              <span
-                style={{
-                  fontSize: "3rem",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  height: "100%",
-                  color: "#888",
-                }}
-              >
-                👤
-              </span>
-            )}
-          </div>
-          <input
-            type="file"
-            accept="image/*"
-            className="form-control form-control-sm"
-            onChange={handlePicUpload}
-          />
-          {msg && (
-            <p
-              className={`mt-2 text-center ${
-                msg.startsWith("✅") ? "text-success" : "text-danger"
-              }`}
-            >
-              {msg}
-            </p>
-          )}
-        </div>
-
-        <h3 className="text-center mb-4 fw-bold">{user.name}</h3>
-        <div className="mb-2">
-          <strong>Email:</strong> {user.email}
-        </div>
-        <div className="mb-2">
-          <strong>Account Number:</strong> {user.accountNumber}
-        </div>
-        <div className="mb-4">
-          <strong>Balance:</strong> ₦{user.balance.toLocaleString()}
-        </div>
-
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          className="btn btn-primary w-100 fw-semibold py-2 mb-2"
-        >
-          Edit Profile
-        </motion.button>
-
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          className="btn btn-outline-secondary w-100"
-          onClick={() => window.history.back()}
-        >
-          Back
-        </motion.button>
-      </motion.div>
+            ⬅ Back to Dashboard
+          </button>
+        </Link>
+      </div>
     </div>
   );
 }

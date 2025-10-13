@@ -6,6 +6,10 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   accountNumber: { type: Number, unique: true },
   balance: { type: Number, default: 0 },
-}, { timestamps: true });
+  profilePic: { type: String }, 
+  transactions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Transaction" }],
+  loans: [{ type: Object }],
+  savings: { type: Number, default: 0 },
+});
 
 module.exports = mongoose.model("User", userSchema);
