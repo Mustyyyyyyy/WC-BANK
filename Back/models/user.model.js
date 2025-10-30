@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   accountNumber: { type: Number, unique: true },
-  balance: { type: Number, default: 0 },
+  balance: { type: Number, default: 5000 },
   profilePic: { type: String }, 
   transactions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Transaction" }],
   loans: [{ type: Object }],
