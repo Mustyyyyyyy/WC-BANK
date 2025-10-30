@@ -8,16 +8,23 @@ export default function TransactionHistory() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return navigate("/login");
+
     const fetchTransactions = async () => {
       try {
-        const res = await api.get("/transactions");
+        const res = await api.get("/transactions", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setTransactions(res.data.transactions || []);
       } catch (err) {
         console.error("Error fetching transactions", err);
+        navigate("/dashboard");
       }
     };
+
     fetchTransactions();
-  }, []);
+  }, [navigate]);
 
   return (
     <div
@@ -49,7 +56,9 @@ export default function TransactionHistory() {
                 >
                   <div>
                     <strong>{tx.type}</strong>
-                    <p className="small text-muted mb-0">{tx.date}</p>
+                    <p className="small text-muted mb-0">
+                      {new Date(tx.date).toLocaleString()}
+                    </p>
                   </div>
                   <span
                     className={`fw-bold ${
@@ -57,7 +66,7 @@ export default function TransactionHistory() {
                     }`}
                   >
                     {tx.type === "Credit" ? "+" : "-"}₦
-                    {tx.amount.toLocaleString()}
+                    {Number(tx.amount || 0).toLocaleString()}
                   </span>
                 </li>
               ))}

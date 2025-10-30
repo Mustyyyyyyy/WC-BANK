@@ -18,13 +18,16 @@ export default function Airtime() {
   const handleAirtime = async (e) => {
     e.preventDefault();
     if (!airtime.phone || !airtime.amount) return setMsg("Please fill all fields.");
+
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      await api.post("/airtime", airtime, { headers: { Authorization: `Bearer ${token}` } });
+      await api.post("/api/bank/airtime", airtime, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setMsg("✅ Airtime purchased!");
       setAirtime({ phone: "", amount: "" });
-    } catch {
+    } catch (err) {
       setMsg("❌ Airtime purchase failed");
     } finally {
       setLoading(false);
@@ -121,6 +124,7 @@ export default function Airtime() {
             Purchase
           </button>
         </form>
+
         {msg && <div className="mt-3 text-center">{msg}</div>}
 
         <Link to="/dashboard" style={{ textDecoration: "none" }}>

@@ -127,15 +127,21 @@ exports.getDashboard = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const updated = await User.findByIdAndUpdate(req.user.id, req.body, {
+    const updated = await User.findByIdAndUpdate(req.userId, req.body, {
       new: true,
     }).select("-password");
+
+    if (!updated) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
     res.json({ user: updated });
   } catch (err) {
     console.error("❌ Update Profile Error:", err);
     res.status(500).json({ message: "Error updating profile" });
   }
 };
+
 
 exports.support = async (req, res) => {
   try {

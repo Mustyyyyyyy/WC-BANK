@@ -17,15 +17,25 @@ export default function Support() {
 
   const handleSupport = async (e) => {
     e.preventDefault();
-    if (!message) return setMsg("Please enter a message.");
+    setMsg("");
+
+    if (!message.trim()) return setMsg("❌ Please enter a message.");
+
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      await api.post("/support", { message }, { headers: { Authorization: `Bearer ${token}` } });
+
+      const res = await api.post(
+        "/support",
+        { message },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
       setMsg("✅ Support message sent!");
       setMessage("");
-    } catch {
-      setMsg("❌ Failed to send support message");
+    } catch (err) {
+      console.error("❌ Support Error:", err.response?.data || err.message);
+      setMsg(err.response?.data?.message || "❌ Failed to send support message");
     } finally {
       setLoading(false);
     }
@@ -42,7 +52,10 @@ export default function Support() {
         transition: "all 0.3s",
       }}
     >
-      <div className="mb-5 w-100 d-flex justify-content-between align-items-center" style={{ maxWidth: 500 }}>
+      <div
+        className="mb-5 w-100 d-flex justify-content-between align-items-center"
+        style={{ maxWidth: 500 }}
+      >
         <h2 className="fw-bold">📝 Support</h2>
         <button
           onClick={() => setDarkMode(!darkMode)}
@@ -69,7 +82,9 @@ export default function Support() {
           borderRadius: 20,
           background: darkMode ? "#2c2c2c" : "#fff",
           color: darkMode ? "#f8f9fa" : "#232526",
-          boxShadow: darkMode ? "0 8px 32px rgba(0,0,0,0.4)" : "0 8px 32px rgba(0,0,0,0.1)",
+          boxShadow: darkMode
+            ? "0 8px 32px rgba(0,0,0,0.4)"
+            : "0 8px 32px rgba(0,0,0,0.1)",
         }}
       >
         <form onSubmit={handleSupport}>
@@ -77,7 +92,7 @@ export default function Support() {
             <label className="form-label fw-semibold">Message</label>
             <textarea
               rows={5}
-              placeholder="Enter your message"
+              placeholder="Enter your message..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               className="form-control"
@@ -89,6 +104,7 @@ export default function Support() {
               }}
             />
           </div>
+
           <button
             type="submit"
             className="btn w-100 fw-bold"
@@ -102,10 +118,18 @@ export default function Support() {
             }}
             disabled={loading}
           >
-            Send
+            {loading ? "⏳ Sending..." : "Send Message"}
           </button>
         </form>
-        {msg && <div className="mt-3 text-center">{msg}</div>}
+
+        {msg && (
+          <div
+            className="mt-3 text-center fw-semibold"
+            style={{ color: msg.startsWith("✅") ? "#1cc88a" : "#e74a3b" }}
+          >
+            {msg}
+          </div>
+        )}
 
         <Link to="/dashboard" style={{ textDecoration: "none" }}>
           <button

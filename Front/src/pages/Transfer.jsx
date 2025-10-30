@@ -7,6 +7,7 @@ export default function Transfer() {
   const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(true);
   const [transfer, setTransfer] = useState({ recipient: "", amount: "" });
+  const [recipientData, setRecipientData] = useState(null);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -15,16 +16,50 @@ export default function Transfer() {
     if (!token) navigate("/login");
   }, [navigate]);
 
+  const findRecipient = async () => {
+    try {
+      if (!transfer.recipient) return;
+      const token = localStorage.getItem("token");
+
+      const res = await api.get(`/bank/find/${transfer.recipient}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setRecipientData(res.data.user);
+      setMsg("");
+    } catch {
+      setRecipientData(null);
+      setMsg("❌ Account not found");
+    }
+  };
+
   const handleTransfer = async (e) => {
     e.preventDefault();
-    if (!transfer.recipient || !transfer.amount) return setMsg("Please fill all fields.");
+    if (!recipientData || !transfer.amount)
+      return setMsg("🔔 Enter valid details before sending");
+
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      await api.post("/transfer", transfer, { headers: { Authorization: `Bearer ${token}` } });
-      setMsg("✅ Transfer successful!");
-      setTransfer({ recipient: "", amount: "" });
-    } catch {
+
+      const res = await api.post(
+        "/bank/transfer",
+        {
+          recipientId: recipientData._id,
+          amount: Number(transfer.amount),
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      navigate("/transfer-success", {
+        state: {
+          recipientName: recipientData.name,
+          amount: Number(transfer.amount),
+          transactionRef: res.data?.reference,
+        },
+      });
+    } catch (err) {
+      console.error(err);
       setMsg("❌ Transfer failed");
     } finally {
       setLoading(false);
@@ -42,7 +77,10 @@ export default function Transfer() {
         transition: "all 0.3s",
       }}
     >
-      <div className="mb-5 w-100 d-flex justify-content-between align-items-center" style={{ maxWidth: 500 }}>
+      <div
+        className="mb-5 w-100 d-flex justify-content-between align-items-center"
+        style={{ maxWidth: 500 }}
+      >
         <h2 className="fw-bold">💸 Transfer Funds</h2>
         <button
           onClick={() => setDarkMode(!darkMode)}
@@ -69,7 +107,9 @@ export default function Transfer() {
           borderRadius: 20,
           background: darkMode ? "#2c2c2c" : "#fff",
           color: darkMode ? "#f8f9fa" : "#232526",
-          boxShadow: darkMode ? "0 8px 32px rgba(0,0,0,0.4)" : "0 8px 32px rgba(0,0,0,0.1)",
+          boxShadow: darkMode
+            ? "0 8px 32px rgba(0,0,0,0.4)"
+            : "0 8px 32px rgba(0,0,0,0.1)",
         }}
       >
         <form onSubmit={handleTransfer}>
@@ -79,7 +119,10 @@ export default function Transfer() {
               type="text"
               placeholder="Account Number"
               value={transfer.recipient}
-              onChange={(e) => setTransfer({ ...transfer, recipient: e.target.value })}
+              onChange={(e) =>
+                setTransfer({ ...transfer, recipient: e.target.value })
+              }
+              onBlur={findRecipient}
               className="form-control"
               style={{
                 borderRadius: 10,
@@ -89,13 +132,22 @@ export default function Transfer() {
               }}
             />
           </div>
+
+          {recipientData && (
+            <div className="alert alert-info text-center p-2 fw-semibold">
+              ✅ Recipient: {recipientData.name} ({recipientData.accountNumber})
+            </div>
+          )}
+
           <div className="mb-3">
             <label className="form-label fw-semibold">Amount</label>
             <input
               type="number"
               placeholder="Enter amount"
               value={transfer.amount}
-              onChange={(e) => setTransfer({ ...transfer, amount: e.target.value })}
+              onChange={(e) =>
+                setTransfer({ ...transfer, amount: e.target.value })
+              }
               className="form-control"
               style={{
                 borderRadius: 10,
@@ -105,6 +157,7 @@ export default function Transfer() {
               }}
             />
           </div>
+
           <button
             type="submit"
             className="btn w-100 fw-bold"
@@ -118,10 +171,11 @@ export default function Transfer() {
             }}
             disabled={loading}
           >
-            Send
+            {loading ? "Sending..." : "Send"}
           </button>
         </form>
-        {msg && <div className="mt-3 text-center">{msg}</div>}
+
+        {msg && <div className="mt-3 text-center fw-semibold">{msg}</div>}
 
         <Link to="/dashboard" style={{ textDecoration: "none" }}>
           <button

@@ -12,25 +12,42 @@ export default function Profile() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) navigate("/login");
+    if (!token) return navigate("/login");
 
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser) setUser(storedUser);
+    const getUser = async () => {
+      try {
+        const res = await api.get("/api/auth/me", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setUser(res.data);
+        localStorage.setItem("user", JSON.stringify(res.data));
+      } catch (err) {
+        console.error("❌ Profile Fetch Error:", err.response?.data || err.message);
+        navigate("/login");
+      }
+    };
+
+    getUser();
   }, [navigate]);
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
-    if (!user.name || !user.email) return setMsg("Please fill all fields.");
+    setMsg("");
+    setLoading(true);
 
     try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
-      const res = await api.put("/me", user, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.put(
+        "/api/auth/me",
+        { name: user.name, email: user.email },
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      );
+
       setUser(res.data);
       localStorage.setItem("user", JSON.stringify(res.data));
-      setMsg("✅ Profile updated!");
-    } catch {
+      setMsg("✅ Profile updated successfully!");
+    } catch (err) {
       setMsg("❌ Failed to update profile");
+      console.error(err.response?.data || err.message);
     } finally {
       setLoading(false);
     }
@@ -74,7 +91,6 @@ export default function Profile() {
           borderRadius: 20,
           background: darkMode ? "#2c2c2c" : "#fff",
           color: darkMode ? "#f8f9fa" : "#232526",
-          boxShadow: darkMode ? "0 8px 32px rgba(0,0,0,0.4)" : "0 8px 32px rgba(0,0,0,0.1)",
         }}
       >
         <form onSubmit={handleProfileUpdate}>
@@ -86,14 +102,10 @@ export default function Profile() {
               value={user.name}
               onChange={(e) => setUser({ ...user, name: e.target.value })}
               className="form-control"
-              style={{
-                borderRadius: 10,
-                background: darkMode ? "#232526" : "#f8f9fa",
-                color: darkMode ? "#fff" : "#232526",
-                border: "1.5px solid #1cc88a",
-              }}
+              style={{ borderRadius: 10 }}
             />
           </div>
+
           <div className="mb-3">
             <label className="form-label fw-semibold">Email</label>
             <input
@@ -102,42 +114,37 @@ export default function Profile() {
               value={user.email}
               onChange={(e) => setUser({ ...user, email: e.target.value })}
               className="form-control"
-              style={{
-                borderRadius: 10,
-                background: darkMode ? "#232526" : "#f8f9fa",
-                color: darkMode ? "#fff" : "#232526",
-                border: "1.5px solid #1cc88a",
-              }}
+              style={{ borderRadius: 10 }}
             />
           </div>
+
           <button
             type="submit"
             className="btn w-100 fw-bold"
             style={{
               background: "#1cc88a",
-              color: darkMode ? "#232526" : "#fff",
-              borderRadius: 10,
-              padding: "10px",
-              fontSize: "1.1rem",
-              boxShadow: "0 2px 8px rgba(28,200,138,0.18)",
-            }}
-            disabled={loading}
-          >
-            Save Changes
-          </button>
-        </form>
-        {msg && <div className="mt-3 text-center">{msg}</div>}
-
-        <Link to="/dashboard" style={{ textDecoration: "none" }}>
-          <button
-            className="btn w-100 mt-3 fw-bold"
-            style={{
-              background: darkMode ? "#4e73df" : "#232526",
               color: "#fff",
               borderRadius: 10,
               padding: "10px",
               fontSize: "1.1rem",
-              boxShadow: "0 2px 8px rgba(78,115,223,0.2)",
+            }}
+            disabled={loading}
+          >
+            {loading ? "Saving..." : "Save Changes"}
+          </button>
+        </form>
+
+        {msg && <div className="mt-3 text-center">{msg}</div>}
+
+        <Link to="/dashboard" className="text-decoration-none">
+          <button
+            className="btn w-100 mt-3 fw-bold"
+            style={{
+              background: "#4e73df",
+              color: "#fff",
+              borderRadius: 10,
+              padding: "10px",
+              fontSize: "1.1rem",
             }}
           >
             ⬅ Back to Dashboard

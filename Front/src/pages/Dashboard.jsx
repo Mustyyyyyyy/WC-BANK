@@ -25,7 +25,9 @@ export default function Dashboard() {
 
     const fetchUser = async () => {
       try {
-        const res = await api.get("/me", { headers: { Authorization: `Bearer ${token}` } });
+        const res = await api.get("/api/bank/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setUser(res.data);
         localStorage.setItem("user", JSON.stringify(res.data));
       } catch {
@@ -90,21 +92,9 @@ export default function Dashboard() {
                 cursor: "pointer",
                 background: darkMode ? "#2a2a2a" : "#fff",
                 color: darkMode ? "#f8f9fa" : "#232526",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
                 fontWeight: 600,
                 transition: "all 0.3s",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.05)";
-                e.currentTarget.style.boxShadow = `0 8px 24px ${t.color}55`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
               }}
             >
               <div style={{ color: t.color }}>{t.icon}</div>

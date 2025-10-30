@@ -7,6 +7,7 @@ import Transfer from "./pages/Transfer";
 import Airtime from "./pages/Airtime";
 import Support from "./pages/Support";
 import LandingPage from "./pages/LandingPage";
+import History from "./pages/History";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/transfer" element={<Transfer />} />
         <Route path="/airtime" element={<Airtime />} />
         <Route path="/support" element={<Support />} />
+        <Route path="/history" element={<History />} />
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
   );

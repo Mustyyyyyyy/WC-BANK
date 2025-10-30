@@ -1,10 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://wc-2.onrender.com/api/auth",
-  headers: {
-    "Content-Type": "application/json",
-  },
+  baseURL: "https://wc-2.onrender.com", 
 });
 
 api.interceptors.request.use((config) => {

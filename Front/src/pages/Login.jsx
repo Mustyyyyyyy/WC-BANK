@@ -18,11 +18,14 @@ export default function Login() {
     try {
       const res = await api.post("/login", { email, password });
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data));
+      const { token, user } = res.data;
+
+      // ✅ Store token and user correctly
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
 
       setMsg("✅ Login successful!");
-      setTimeout(() => navigate("/dashboard"), 500);
+      setTimeout(() => navigate("/dashboard"), 600);
     } catch (err) {
       console.error("❌ Login Error:", err.response?.data || err.message);
       setMsg(err.response?.data?.message || "❌ Login failed");
@@ -88,7 +91,12 @@ export default function Login() {
         </form>
 
         {msg && (
-          <p className="mt-3 text-center" style={{ color: msg.startsWith("✅") ? "#1cc88a" : "#FFD700" }}>
+          <p
+            className="mt-3 text-center"
+            style={{
+              color: msg.startsWith("✅") ? "#1cc88a" : "#FFD700",
+            }}
+          >
             {msg}
           </p>
         )}
