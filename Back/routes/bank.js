@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
 const { protect } = require("../middleware/authMiddleware");
+const { transactions } = require("../controllers/userController");
 
 router.post("/fund", protect, async (req, res) => {
   try {
@@ -158,5 +159,9 @@ router.post("/transfer", protect, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+router.get("/transactions", protect, transactions);
+
+
 
 module.exports = router;

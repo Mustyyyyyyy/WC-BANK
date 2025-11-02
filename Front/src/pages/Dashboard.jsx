@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   FaChartPie,
@@ -8,136 +8,192 @@ import {
   FaEnvelope,
   FaSun,
   FaMoon,
+  FaWallet,
+  FaHistory,
 } from "react-icons/fa";
 import api from "../api";
+import "./Dashboard.css";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState({});
+  const [transactions, setTransactions] = useState([]);
   const [darkMode, setDarkMode] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
+
+  const fetchData = useCallback(async () => {
+    try {
+      setErr("");
+      const [meRes, txRes] = await Promise.all([
+        api.get("/api/auth/me"),
+        api.get("/api/auth/transactions"),
+      ]);
+
+      const meData = meRes.data?.user || meRes.data;
+      setUser(meData || {});
+
+      const txData = Array.isArray(txRes.data)
+        ? txRes.data
+        : txRes.data?.transactions || txRes.data || [];
+      setTransactions(txData);
+    } catch (error) {
+      console.error("Dashboard fetch error:", error);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+        return;
+      }
+      setErr("Failed to load dashboard data.");
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) return navigate("/login");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
 
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser) setUser(storedUser);
+    fetchData();
 
-    const fetchUser = async () => {
-      try {
-        const res = await api.get("/api/bank/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setUser(res.data);
-        localStorage.setItem("user", JSON.stringify(res.data));
-      } catch {
-        navigate("/login");
+    const onFocus = () => fetchData();
+    window.addEventListener("focus", onFocus);
+
+    const onStorage = (e) => {
+      if (!e.key) return;
+      if (e.key === "refreshBalance" || e.key === "refreshTransactions") {
+        fetchData();
       }
     };
-    fetchUser();
-  }, [navigate]);
+    window.addEventListener("storage", onStorage);
+
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, [fetchData, navigate]);
+
+  const fmt = (n) => {
+    try {
+      return Number(n || 0).toLocaleString();
+    } catch {
+      return n;
+    }
+  };
 
   const tabConfig = [
-    { key: "overview", label: "Overview", icon: <FaChartPie size={36} />, path: "/dashboard", color: "#4e73df" },
-    { key: "profile", label: "Profile", icon: <FaUser size={36} />, path: "/profile", color: "#1cc88a" },
-    { key: "transfer", label: "Transfer", icon: <FaMoneyBillWave size={36} />, path: "/transfer", color: "#36b9cc" },
-    { key: "airtime", label: "Airtime", icon: <FaMobileAlt size={36} />, path: "/airtime", color: "#f6c23e" },
-    { key: "support", label: "Support", icon: <FaEnvelope size={36} />, path: "/support", color: "#e74a3b" },
+    { key: "overview", label: "Overview", icon: <FaChartPie />, path: "/dashboard", color: "#4e73df" },
+    { key: "transfer", label: "Transfer", icon: <FaMoneyBillWave />, path: "/transfer", color: "#36b9cc" },
+    { key: "airtime", label: "Airtime", icon: <FaMobileAlt />, path: "/airtime", color: "#f6c23e" },
+    { key: "history", label: "History", icon: <FaHistory />, path: "/history", color: "#8b5cf6" },
+    { key: "profile", label: "Profile", icon: <FaUser />, path: "/profile", color: "#1cc88a" },
+    { key: "support", label: "Support", icon: <FaEnvelope />, path: "/support", color: "#e74a3b" },
   ];
 
   return (
-    <div
-      className="d-flex flex-column min-vh-100 align-items-center"
-      style={{
-        background: darkMode ? "#1e1e1e" : "#f0f2f5",
-        color: darkMode ? "#f8f9fa" : "#232526",
-        fontFamily: "Poppins, sans-serif",
-        padding: "2rem 1rem",
-        transition: "all 0.3s ease-in-out",
-      }}
-    >
-      <div className="mb-5 w-100 d-flex justify-content-between align-items-center" style={{ maxWidth: 900 }}>
-        <h2 className="fw-bold" style={{ fontSize: "2rem" }}>
-          🏦 Welcome, {user.name || "User"}
-        </h2>
-        <button
-          onClick={() => setDarkMode(!darkMode)}
-          className="btn"
-          style={{
-            background: darkMode ? "#f8f9fa" : "#232526",
-            color: darkMode ? "#232526" : "#f8f9fa",
-            borderRadius: "50%",
-            width: 50,
-            height: 50,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            fontSize: "1.2rem",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-          }}
-        >
-          {darkMode ? <FaSun /> : <FaMoon />}
-        </button>
-      </div>
+    <div className={`dashboard-root ${darkMode ? "dark" : "light"}`}>
+      <div className="container">
+        <header className="dash-header glass-card">
+          <div>
+            <h1 className="welcome">🏦 Welcome, <span className="name">{user.name || "User"}</span></h1>
+            <p className="sub">Secure digital banking — transfers, airtime, savings.</p>
+          </div>
 
-      <div className="d-flex justify-content-center flex-wrap gap-4 mb-5" style={{ maxWidth: 900 }}>
-        {tabConfig.map((t) => (
-          <Link to={t.path} key={t.key} style={{ textDecoration: "none" }}>
-            <div
-              className="d-flex flex-column align-items-center justify-content-center"
-              style={{
-                width: 140,
-                height: 140,
-                borderRadius: 18,
-                cursor: "pointer",
-                background: darkMode ? "#2a2a2a" : "#fff",
-                color: darkMode ? "#f8f9fa" : "#232526",
-                fontWeight: 600,
-                transition: "all 0.3s",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-              }}
+          <div className="header-actions">
+            <button
+              className="theme-toggle"
+              onClick={() => setDarkMode((d) => !d)}
+              aria-label="Toggle theme"
             >
-              <div style={{ color: t.color }}>{t.icon}</div>
-              <span style={{ marginTop: 8 }}>{t.label}</span>
-            </div>
-          </Link>
-        ))}
-      </div>
+              {darkMode ? <FaSun /> : <FaMoon />}
+            </button>
 
-      <div
-        className="card p-4 shadow-lg w-100"
-        style={{
-          maxWidth: 500,
-          borderRadius: 20,
-          background: darkMode ? "#2c2c2c" : "#fff",
-          color: darkMode ? "#f8f9fa" : "#232526",
-          boxShadow: darkMode
-            ? "0 8px 32px rgba(0,0,0,0.4)"
-            : "0 8px 32px rgba(0,0,0,0.1)",
-          transition: "all 0.3s",
-        }}
-      >
-        <h3 className="mb-4 fw-bold" style={{ color: "#4e73df" }}>
-          💰 Account Overview
-        </h3>
-        <div
-          style={{
-            background: "rgba(78,115,223,0.12)",
-            borderRadius: 14,
-            padding: "1rem",
-            fontSize: "1.1rem",
-          }}
-        >
-          <div>
-            <strong>Account Number:</strong> {user.accountNumber || "-"}
+            <Link to="/profile" className="small-link">My Profile</Link>
           </div>
-          <div>
-            <strong>Balance:</strong>{" "}
-            <span style={{ color: "#1cc88a", fontWeight: 700 }}>
-              ₦{user.balance?.toLocaleString() || 0}
-            </span>
-          </div>
-        </div>
+        </header>
+
+        <main className="dash-grid">
+          <section className="account glass-card glow">
+            <div className="account-left">
+              <div className="wallet">
+                <FaWallet />
+              </div>
+              <div>
+                <p className="label">Account Number</p>
+                <h3 className="acc-num">{user.accountNumber || "-"}</h3>
+              </div>
+            </div>
+
+            <div className="account-right">
+              <p className="label">Current Balance</p>
+              <h2 className="balance">₦{fmt(user.balance)}</h2>
+              <div className="account-quick">
+                <Link to="/fund" className="btn btn-small">Fund</Link>
+                <Link to="/transfer" className="btn btn-small outline">Transfer</Link>
+              </div>
+            </div>
+          </section>
+
+          <section className="menu-grid">
+            {tabConfig.map((t) => (
+              <Link key={t.key} to={t.path} className="menu-card glass-card glow" style={{ borderColor: t.color }}>
+                <div className="menu-icon" style={{ color: t.color }}>{t.icon}</div>
+                <div className="menu-label">{t.label}</div>
+              </Link>
+            ))}
+          </section>
+
+          <section className="transactions glass-card">
+            <div className="tx-header">
+              <h3>📜 Recent Transactions</h3>
+              <div>
+                <button className="btn btn-small" onClick={fetchData}>Refresh</button>
+                <Link to="/history" className="small-link ms">See all</Link>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="tx-loading">Loading...</div>
+            ) : err ? (
+              <div className="tx-error">{err}</div>
+            ) : transactions.length === 0 ? (
+              <div className="tx-empty">No transactions yet</div>
+            ) : (
+              <ul className="tx-list">
+                {transactions.slice(0, 8).map((tx, i) => {
+                  const type = (tx.type || tx.transactionType || "").toString().toLowerCase();
+                  const amount = tx.amount ?? tx.value ?? 0;
+                  const desc = tx.details || tx.description || tx.note || tx.type || "Transaction";
+                  const date = tx.date || tx.createdAt || tx.createdAt || tx.createdAt;
+                  const isCredit = /credit|received|deposit/i.test(type);
+
+                  return (
+                    <li key={i} className={`tx-item ${isCredit ? "credit" : "debit"}`}>
+                      <div className="tx-left">
+                        <div className="tx-dot" aria-hidden />
+                        <div className="tx-meta">
+                          <div className="tx-desc">{desc}</div>
+                          <small className="tx-date">{date ? new Date(date).toLocaleString() : ""}</small>
+                        </div>
+                      </div>
+                      <div className={`tx-amt ${isCredit ? "up" : "down"}`}>
+                        {isCredit ? "+" : "-"}₦{fmt(amount)}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+        </main>
+
+        <footer className="dash-footer">
+          <small>© {new Date().getFullYear()} WC Bank — Secure • Fast • Reliable</small>
+        </footer>
       </div>
     </div>
   );

@@ -15,7 +15,7 @@ export default function TransferSuccess() {
         const token = localStorage.getItem("token");
         if (!token) return navigate("/login");
 
-        const res = await api.get("/bank/me", {
+        const res = await api.get("/api/bank/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
 

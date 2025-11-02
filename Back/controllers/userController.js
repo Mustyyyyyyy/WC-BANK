@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
 const Support = require("../models/support");
+const nodemailer = require("nodemailer");
 
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
@@ -17,9 +18,10 @@ exports.signup = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const randomBalance = Math.floor(Math.random() * 1000000); 
+    const randomBalance = Math.floor(Math.random() * 1000000);
 
-    const generateAccountNumber = () => Math.floor(1000000000 + Math.random() * 9000000000);
+    const generateAccountNumber = () =>
+      Math.floor(1000000000 + Math.random() * 9000000000);
     const accountNumber = generateAccountNumber();
 
     const user = await User.create({
@@ -32,6 +34,59 @@ exports.signup = async (req, res) => {
 
     const token = generateToken(user._id);
 
+    // ✉️ Email transport setup
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER, // your Gmail from env
+        pass: process.env.EMAIL_PASS, // app password (not normal Gmail pass)
+      },
+    });
+
+    const mailOptions = {
+      from: `"WC Bank" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: "Welcome to WC Bank ✅",
+      html: `
+<div style="background:#f5f9ff;padding:20px;font-family:Arial,Helvetica,sans-serif;">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff;padding:25px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+    <div style="text-align:center;margin-bottom:20px;">
+      <h1 style="color:#0050e6;margin:0;font-size:28px;">WC Bank</h1>
+      <p style="color:#666;margin:4px 0 0;font-size:14px;">Your Trusted Digital Banking Experience</p>
+    </div>
+
+    <h2 style="color:#003b99;font-size:22px;margin-bottom:10px;">Welcome, ${user.name}! 🎉</h2>
+
+    <p style="color:#444;font-size:15px;line-height:1.6;margin-bottom:16px;">
+      Your WC Bank account has been successfully created. We're excited to have you on board!
+    </p>
+
+    <div style="background:#eef4ff;padding:15px;border-radius:8px;margin:20px 0;">
+      <p style="color:#003b99;font-size:16px;margin:0;"><strong>Account Number:</strong></p>
+      <h3 style="color:#001e66;margin:8px 0 0;font-size:20px;letter-spacing:2px;">
+        ${user.accountNumber}
+      </h3>
+    </div>
+
+    <p style="color:#444;font-size:15px;line-height:1.6;">
+      You can now log in to enjoy secure and seamless online banking.
+    </p>
+
+    <br/>
+
+    <p style="color:#333;font-size:14px;margin-bottom:4px;">Best regards,</p>
+    <p style="color:#003b99;font-size:15px;font-weight:bold;margin:0;">WC Bank Team</p>
+  </div>
+
+  <p style="text-align:center;color:#777;font-size:12px;margin-top:15px;">
+    © WC Bank. All rights reserved.
+  </p>
+</div>
+`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
     res.status(201).json({
       id: user._id,
       name: user.name,
@@ -39,7 +94,9 @@ exports.signup = async (req, res) => {
       accountNumber: user.accountNumber,
       balance: user.balance,
       token,
+      message: "Signup successful, email sent ✅",
     });
+
   } catch (err) {
     console.error("❌ Signup Error:", err);
     res.status(500).json({ message: "Server error" });
@@ -154,3 +211,10 @@ exports.support = async (req, res) => {
     res.status(500).json({ message: "Error sending support request" });
   }
 };
+
+
+exports.transactions = async (req, res) => {
+  const user = await User.findById(req.user._id);
+  res.json(user.transactions || []);
+};
+

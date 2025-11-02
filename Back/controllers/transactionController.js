@@ -27,13 +27,22 @@ exports.transferFunds = async (req, res) => {
     await sender.save();
     await receiver.save();
 
-
     const transaction = await Transaction.create({
-      type: "transfer",
+      type: "Debit",
       amount,
+      description: `Transfer to ${receiver.name}`,
       sender: sender._id,
       receiver: receiver._id,
-      receiverAccountNumber: accountNumber,
+      date: new Date()
+    });
+
+    await Transaction.create({
+      type: "Credit",
+      amount,
+      description: `Transfer from ${sender.name}`,
+      sender: sender._id,
+      receiver: receiver._id,
+      date: new Date()
     });
 
     res.json({
@@ -48,30 +57,33 @@ exports.transferFunds = async (req, res) => {
 
 exports.buyAirtime = async (req, res) => {
   try {
-    const { amount, phoneNumber, network } = req.body;
+    const { amount, phone, network } = req.body;
     const userId = req.user.id;
 
-    if (!amount || !phoneNumber || !network)
+    if (!amount || !phone || !network)
       return res.status(400).json({ message: "All fields are required" });
 
     const user = await User.findById(userId);
 
-    if (user.balance < amount)
+    if (user.balance < Number(amount))
       return res.status(400).json({ message: "Insufficient balance" });
 
-    user.balance -= amount;
+    user.balance -= Number(amount);
     await user.save();
 
     const transaction = await Transaction.create({
-      type: "airtime",
-      amount,
+      type: "Debit",
+      amount: Number(amount),
+      description: `Airtime Purchase (${network})`,
       sender: user._id,
+      receiver: null,
+      phone,
       network,
-      phoneNumber,
+      date: new Date()
     });
 
     res.json({
-      message: `Airtime of ₦${amount} successfully purchased for ${phoneNumber}`,
+      message: `Airtime ₦${amount} purchased for ${phone}`,
       transaction,
     });
   } catch (err) {
@@ -86,10 +98,7 @@ exports.getUserTransactions = async (req, res) => {
 
     const transactions = await Transaction.find({
       $or: [{ sender: userId }, { receiver: userId }],
-    })
-      .populate("sender", "name accountNumber")
-      .populate("receiver", "name accountNumber")
-      .sort({ createdAt: -1 });
+    }).sort({ date: -1 });
 
     res.json(transactions);
   } catch (err) {

@@ -6,7 +6,7 @@ import api from "../api";
 export default function Airtime() {
   const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(true);
-  const [airtime, setAirtime] = useState({ phone: "", amount: "" });
+  const [airtime, setAirtime] = useState({ network: "", phone: "", amount: "" });
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -17,130 +17,88 @@ export default function Airtime() {
 
   const handleAirtime = async (e) => {
     e.preventDefault();
-    if (!airtime.phone || !airtime.amount) return setMsg("Please fill all fields.");
+    if (!airtime.phone || !airtime.amount || !airtime.network) return setMsg("⚠ Please select network and fill all fields.");
 
     try {
       setLoading(true);
+      setMsg("");
       const token = localStorage.getItem("token");
-      await api.post("/api/bank/airtime", airtime, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setMsg("✅ Airtime purchased!");
-      setAirtime({ phone: "", amount: "" });
+
+      const res = await api.post(
+        "/api/auth/airtime",
+        {
+          network: airtime.network,
+          phoneNumber: airtime.phone,
+          amount: Number(airtime.amount),
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      window.dispatchEvent(new Event("balanceUpdated"));
+      localStorage.setItem("refreshBalance", "1");
+
+      setMsg("✅ Airtime purchased successfully!");
+      setAirtime({ network: "", phone: "", amount: "" });
     } catch (err) {
-      setMsg("❌ Airtime purchase failed");
+      console.error("Airtime failed:", err);
+      setMsg(err.response?.data?.message || "❌ Airtime purchase failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
-      className="d-flex flex-column min-vh-100 align-items-center"
-      style={{
-        background: darkMode ? "#1e1e1e" : "#f0f2f5",
-        color: darkMode ? "#f8f9fa" : "#232526",
-        fontFamily: "Poppins, sans-serif",
-        padding: "2rem 1rem",
-        transition: "all 0.3s",
-      }}
-    >
-      <div className="mb-5 w-100 d-flex justify-content-between align-items-center" style={{ maxWidth: 500 }}>
-        <h2 className="fw-bold">📱 Buy Airtime</h2>
-        <button
-          onClick={() => setDarkMode(!darkMode)}
-          className="btn"
-          style={{
-            background: darkMode ? "#f8f9fa" : "#232526",
-            color: darkMode ? "#232526" : "#f8f9fa",
-            borderRadius: "50%",
-            width: 50,
-            height: 50,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          {darkMode ? <FaSun /> : <FaMoon />}
-        </button>
-      </div>
+    <div style={{ minHeight: "100vh", padding: 20, display: "grid", placeItems: "center", background: darkMode ? "#0b1220" : "#f7fbff" }}>
+      <div style={{ width: 480, borderRadius: 14, padding: 22, background: darkMode ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.9)", backdropFilter: "blur(8px)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <h2 style={{ margin: 0 }}>📱 Buy Airtime</h2>
+          <button onClick={() => setDarkMode(d => !d)} style={{ borderRadius: "50%", width: 40, height: 40 }}>{darkMode ? <FaSun /> : <FaMoon />}</button>
+        </div>
 
-      <div
-        className="card p-4 shadow-lg w-100"
-        style={{
-          maxWidth: 500,
-          borderRadius: 20,
-          background: darkMode ? "#2c2c2c" : "#fff",
-          color: darkMode ? "#f8f9fa" : "#232526",
-          boxShadow: darkMode ? "0 8px 32px rgba(0,0,0,0.4)" : "0 8px 32px rgba(0,0,0,0.1)",
-        }}
-      >
         <form onSubmit={handleAirtime}>
-          <div className="mb-3">
-            <label className="form-label fw-semibold">Phone Number</label>
-            <input
-              type="text"
-              placeholder="08012345678"
-              value={airtime.phone}
-              onChange={(e) => setAirtime({ ...airtime, phone: e.target.value })}
-              className="form-control"
-              style={{
-                borderRadius: 10,
-                background: darkMode ? "#232526" : "#f8f9fa",
-                color: darkMode ? "#fff" : "#232526",
-                border: "1.5px solid #f6c23e",
-              }}
-            />
-          </div>
-          <div className="mb-3">
-            <label className="form-label fw-semibold">Amount</label>
-            <input
-              type="number"
-              placeholder="Enter amount"
-              value={airtime.amount}
-              onChange={(e) => setAirtime({ ...airtime, amount: e.target.value })}
-              className="form-control"
-              style={{
-                borderRadius: 10,
-                background: darkMode ? "#232526" : "#f8f9fa",
-                color: darkMode ? "#fff" : "#232526",
-                border: "1.5px solid #f6c23e",
-              }}
-            />
-          </div>
-          <button
-            type="submit"
-            className="btn w-100 fw-bold"
-            style={{
-              background: "#f6c23e",
-              color: darkMode ? "#232526" : "#fff",
-              borderRadius: 10,
-              padding: "10px",
-              fontSize: "1.1rem",
-              boxShadow: "0 2px 8px rgba(246,194,62,0.18)",
-            }}
-            disabled={loading}
+          <label>Network</label>
+          <select
+            value={airtime.network}
+            onChange={(e) => setAirtime({ ...airtime, network: e.target.value })}
+            className="form-select mb-3"
+            style={{ padding: 12, borderRadius: 10 }}
           >
-            Purchase
+            <option value="">Select network</option>
+            <option value="MTN">MTN</option>
+            <option value="Airtel">Airtel</option>
+            <option value="GLO">GLO</option>
+            <option value="9mobile">9mobile</option>
+          </select>
+
+          <label>Phone Number</label>
+          <input
+            type="text"
+            value={airtime.phone}
+            onChange={(e) => setAirtime({ ...airtime, phone: e.target.value })}
+            className="form-control mb-3"
+            placeholder="08012345678"
+            style={{ padding: 12, borderRadius: 10 }}
+          />
+
+          <label>Amount (₦)</label>
+          <input
+            type="number"
+            value={airtime.amount}
+            onChange={(e) => setAirtime({ ...airtime, amount: e.target.value })}
+            className="form-control mb-3"
+            placeholder="500"
+            style={{ padding: 12, borderRadius: 10 }}
+          />
+
+          <button type="submit" disabled={loading} style={{ width: "100%", padding: 12, borderRadius: 10, background: "#4e73df", color: "#fff", border: "none" }}>
+            {loading ? "Processing..." : "Purchase"}
           </button>
         </form>
 
-        {msg && <div className="mt-3 text-center">{msg}</div>}
+        {msg && <div style={{ marginTop: 12, color: msg.startsWith("✅") ? "#10b981" : "#f87171" }}>{msg}</div>}
 
-        <Link to="/dashboard" style={{ textDecoration: "none" }}>
-          <button
-            className="btn w-100 mt-3 fw-bold"
-            style={{
-              background: darkMode ? "#4e73df" : "#232526",
-              color: "#fff",
-              borderRadius: 10,
-              padding: "10px",
-              fontSize: "1.1rem",
-              boxShadow: "0 2px 8px rgba(78,115,223,0.2)",
-            }}
-          >
-            ⬅ Back to Dashboard
-          </button>
+        <Link to="/dashboard">
+          <button style={{ width: "100%", marginTop: 12, padding: 10, borderRadius: 10, border: "none", background: "#161b22", color: "#fff" }}>⬅ Back to Dashboard</button>
         </Link>
       </div>
     </div>

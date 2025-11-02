@@ -7,80 +7,106 @@ export default function TransactionHistory() {
   const [transactions, setTransactions] = useState([]);
   const navigate = useNavigate();
 
+  const fetchTransactions = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return navigate("/login");
+
+      const res = await api.get("/api/bank/transactions", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setTransactions(res.data);
+    } catch (err) {
+      console.error("Transaction history fetch error:", err);
+      navigate("/dashboard");
+    }
+  };
+
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return navigate("/login");
-
-    const fetchTransactions = async () => {
-      try {
-        const res = await api.get("/transactions", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setTransactions(res.data.transactions || []);
-      } catch (err) {
-        console.error("Error fetching transactions", err);
-        navigate("/dashboard");
-      }
-    };
-
     fetchTransactions();
+    window.addEventListener("focus", fetchTransactions);
+    return () => window.removeEventListener("focus", fetchTransactions);
   }, [navigate]);
+
+  const formatTxText = (tx) => {
+    if (tx.type === "transfer") {
+      if (tx.receiver && tx.receiver.name) {
+        return `Transfer to ${tx.receiver.name}`;
+      } else if (tx.sender && tx.sender.name) {
+        return `Transfer from ${tx.sender.name}`;
+      }
+    }
+    if (tx.description === "Airtime Purchase") return "Airtime Purchase";
+    return tx.type || "Transaction";
+  };
 
   return (
     <div
-      className="min-vh-100 text-white"
+      className="min-vh-100 d-flex justify-content-center align-items-start pt-5"
       style={{
-        background: "linear-gradient(135deg, #141e30, #243b55)",
+        background: "linear-gradient(135deg, #1f1f1f, #2f2f2f)",
         fontFamily: "Poppins, sans-serif",
+        padding: "1.5rem",
       }}
     >
-      <div className="container py-5">
-        <motion.div
-          initial={{ opacity: 0, y: 60 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          className="card bg-light text-dark shadow-lg rounded-4 p-4"
-        >
-          <h4 className="fw-bold text-primary mb-3 text-center">
-            💳 Transaction History
-          </h4>
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="shadow-lg p-4 rounded-4"
+        style={{
+          width: "100%",
+          maxWidth: 480,
+          backdropFilter: "blur(10px)",
+          background: "rgba(255,255,255,0.1)",
+          border: "1px solid rgba(255,255,255,0.15)",
+          color: "white",
+        }}
+      >
+        <h4 className="fw-bold text-center mb-4">📜 Transaction History</h4>
 
-          {transactions.length === 0 ? (
-            <p className="text-center text-muted">No transactions yet</p>
-          ) : (
-            <ul className="list-group list-group-flush">
-              {transactions.map((tx, index) => (
-                <li
-                  key={index}
-                  className="list-group-item d-flex justify-content-between align-items-center"
+        {transactions.length === 0 ? (
+          <p className="text-center text-muted">No transactions found</p>
+        ) : (
+          <ul className="list-group list-group-flush">
+            {transactions.map((tx, index) => (
+              <li
+                key={index}
+                className="list-group-item bg-transparent text-white d-flex justify-content-between"
+                style={{ borderBottom: "1px solid rgba(255,255,255,0.15)" }}
+              >
+                <div>
+                  <strong>{formatTxText(tx)}</strong>
+                  <p className="small text-muted mb-0">
+                    {new Date(tx.date ?? tx.createdAt).toLocaleString()}
+                  </p>
+                </div>
+                <span
+                  className={`fw-bold ${
+                    tx.sender && !tx.receiver
+                      ? "text-danger"
+                      : tx.receiver && !tx.sender
+                      ? "text-success"
+                      : "text-info"
+                  }`}
                 >
-                  <div>
-                    <strong>{tx.type}</strong>
-                    <p className="small text-muted mb-0">
-                      {new Date(tx.date).toLocaleString()}
-                    </p>
-                  </div>
-                  <span
-                    className={`fw-bold ${
-                      tx.type === "Credit" ? "text-success" : "text-danger"
-                    }`}
-                  >
-                    {tx.type === "Credit" ? "+" : "-"}₦
-                    {Number(tx.amount || 0).toLocaleString()}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
+                  {tx.sender && !tx.receiver ? "-" : "+"}₦
+                  {Number(tx.amount || 0).toLocaleString()}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
 
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="btn btn-outline-primary w-100 mt-4"
-          >
-            Back to Dashboard
-          </button>
-        </motion.div>
-      </div>
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="btn btn-outline-light w-100 mt-4"
+          style={{ borderRadius: 10 }}
+        >
+          ⬅ Back to Dashboard
+        </button>
+      </motion.div>
     </div>
   );
 }
