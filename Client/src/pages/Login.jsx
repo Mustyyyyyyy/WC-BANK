@@ -6,6 +6,7 @@ import "animate.css";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await api.post("/api/auth/login", { email, password });
+      const res = await api.post("/auth/login", { email, password });
 
       const { token, user } = res.data;
 
@@ -24,10 +25,15 @@ export default function Login() {
       localStorage.setItem("user", JSON.stringify(user));
 
       setMsg("✅ Login successful!");
-      setTimeout(() => navigate("/dashboard"), 600);
+      setTimeout(() => navigate("/dashboard"), 700);
     } catch (err) {
       console.error("❌ Login Error:", err.response?.data || err.message);
-      setMsg(err.response?.data?.message || "❌ Login failed");
+
+      setMsg(
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "❌ Login failed"
+      );
     } finally {
       setLoading(false);
     }
@@ -51,9 +57,7 @@ export default function Login() {
           color: "white",
         }}
       >
-        <h2 className="text-center mb-4 fw-bold" style={{ fontSize: "2rem" }}>
-          🔐 Welcome Back
-        </h2>
+        <h2 className="text-center mb-4 fw-bold">🔐 Welcome Back</h2>
 
         <form onSubmit={handleLogin}>
           <label className="form-label fw-semibold">Email Address</label>
@@ -69,16 +73,27 @@ export default function Login() {
           />
 
           <label className="form-label fw-semibold">Password</label>
-          <input
-            type="password"
-            className="form-control mb-4 p-3"
-            placeholder="Enter your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            disabled={loading}
-            style={{ borderRadius: "12px", border: "none" }}
-          />
+          <div className="input-group mb-4">
+            <input
+              type={showPass ? "text" : "password"}
+              className="form-control p-3"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={loading}
+              style={{ borderRadius: "12px 0 0 12px", border: "none" }}
+            />
+            <button
+              type="button"
+              className="btn btn-outline-light"
+              onClick={() => setShowPass(!showPass)}
+              disabled={loading}
+              style={{ borderRadius: "0 12px 12px 0" }}
+            >
+              {showPass ? "🙈" : "👁"}
+            </button>
+          </div>
 
           <button
             type="submit"
@@ -91,7 +106,7 @@ export default function Login() {
 
         {msg && (
           <p
-            className="mt-3 text-center"
+            className="mt-3 text-center animate__animated animate__fadeIn"
             style={{
               color: msg.startsWith("✅") ? "#1cc88a" : "#FFD700",
             }}

@@ -176,12 +176,13 @@ exports.transfer = async (req, res) => {
 exports.getTransactions = async (req, res) => {
   try {
     const user = await User.findById(req.userId).select("transactions");
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-    const sortedTransactions = [...user.transactions].reverse();
-    res.json(sortedTransactions);
-  } catch (err) {
-    console.error("Transactions Error:", err);
+    res.status(200).json(user.transactions);
+  } catch (error) {
+    console.error("❌ Get Transactions Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

@@ -6,7 +6,6 @@ const {
   updateProfile,
   support,
   getUsers,
-  transactions,
 } = require("../controllers/userController");
 
 const {
@@ -14,7 +13,7 @@ const {
 } = require("../controllers/transactionController");
 
 const { protect } = require("../middleware/authMiddleware");
-const { airtime } = require("../controllers/bankController");
+const { airtime, getTransactions } = require("../controllers/bankController");
 
 const router = express.Router();
 
@@ -30,6 +29,7 @@ router.post("/airtime", protect, airtime);
 
 router.post("/support", protect, support);
 
-router.get("/transactions", protect, transactions)
+router.get("/transactions", protect, getTransactions);
+
 
 module.exports = router;

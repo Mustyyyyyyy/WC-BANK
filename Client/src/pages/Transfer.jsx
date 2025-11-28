@@ -21,7 +21,7 @@ export default function Transfer() {
       if (!transfer.accountNumber) return;
       setMsg("");
       const token = localStorage.getItem("token");
-      const res = await api.get(`/api/auth/find/${transfer.accountNumber}`, {
+      const res = await api.get(`/auth/find/${transfer.accountNumber}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRecipientData(res.data.user);

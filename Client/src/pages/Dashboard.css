@@ -227,3 +227,44 @@
   .wallet { width: 52px; height: 52px; font-size: 1.25rem; }
   .balance { font-size: 1.25rem; }
 }
+
+.logout-btn {
+  margin-top: 12px;
+  width: 100%;
+  padding: 12px;
+  background-color: #e74a3b;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  align-items: center;
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+}
+
+.logout-btn:hover {
+  opacity: 0.9;
+}
+
+.logout-icon {
+  font-size: 18px;
+}
+
+.dark .logout-btn {
+  background-color: #ff4d4d;
+}
+
+.logout-top {
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 5px;
+}
+.logout-top:hover {
+  opacity: 0.8;
+}

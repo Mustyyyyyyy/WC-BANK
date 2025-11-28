@@ -16,7 +16,7 @@ export default function Profile() {
 
     const getUser = async () => {
       try {
-        const res = await api.get("/api/auth/me", {
+        const res = await api.get("/auth/me", {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUser(res.data);

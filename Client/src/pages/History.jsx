@@ -12,11 +12,11 @@ export default function TransactionHistory() {
       const token = localStorage.getItem("token");
       if (!token) return navigate("/login");
 
-      const res = await api.get("/api/bank/transactions", {
+      const res = await api.get("/transactions", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setTransactions(res.data);
+      setTransactions(res.data.transactions || res.data || []);
     } catch (err) {
       console.error("Transaction history fetch error:", err);
       navigate("/dashboard");
@@ -31,14 +31,31 @@ export default function TransactionHistory() {
 
   const formatTxText = (tx) => {
     if (tx.type === "transfer") {
-      if (tx.receiver && tx.receiver.name) {
-        return `Transfer to ${tx.receiver.name}`;
-      } else if (tx.sender && tx.sender.name) {
-        return `Transfer from ${tx.sender.name}`;
-      }
+      if (tx.receiver && tx.receiver.name) return `Transfer to ${tx.receiver.name}`;
+      if (tx.sender && tx.sender.name) return `Transfer from ${tx.sender.name}`;
     }
-    if (tx.description === "Airtime Purchase") return "Airtime Purchase";
+
+    if (tx.description === "Airtime Purchase") {
+      return `Airtime Purchase (${tx.network || ""})`;
+    }
+
     return tx.type || "Transaction";
+  };
+
+  const formatAmountColor = (tx) => {
+    if (tx.type === "airtime") return "text-danger";
+
+    if (tx.sender && !tx.receiver) return "text-danger"; 
+    if (tx.receiver && !tx.sender) return "text-success";
+
+    return "text-info";
+  };
+
+  const formatAmountPrefix = (tx) => {
+    if (tx.type === "airtime") return "-";
+    if (tx.sender && !tx.receiver) return "-";
+    if (tx.receiver && !tx.sender) return "+";
+    return "";
   };
 
   return (
@@ -79,19 +96,12 @@ export default function TransactionHistory() {
                 <div>
                   <strong>{formatTxText(tx)}</strong>
                   <p className="small text-muted mb-0">
-                    {new Date(tx.date ?? tx.createdAt).toLocaleString()}
+                    {new Date(tx.date || tx.createdAt).toLocaleString()}
                   </p>
                 </div>
-                <span
-                  className={`fw-bold ${
-                    tx.sender && !tx.receiver
-                      ? "text-danger"
-                      : tx.receiver && !tx.sender
-                      ? "text-success"
-                      : "text-info"
-                  }`}
-                >
-                  {tx.sender && !tx.receiver ? "-" : "+"}₦
+
+                <span className={`fw-bold ${formatAmountColor(tx)}`}>
+                  {formatAmountPrefix(tx)}₦
                   {Number(tx.amount || 0).toLocaleString()}
                 </span>
               </li>
