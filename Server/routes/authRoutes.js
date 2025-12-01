@@ -13,7 +13,7 @@ const {
 } = require("../controllers/transactionController");
 
 const { protect } = require("../middleware/authMiddleware");
-const { airtime, getTransactions } = require("../controllers/bankController");
+const { buyAirtime } = require("../controllers/bankController");
 
 const router = express.Router();
 
@@ -25,7 +25,7 @@ router.put("/update-profile", protect, updateProfile);
 router.get("/users", protect, getUsers);
 
 router.post("/transfer", protect, transferFunds);
-router.post("/airtime", protect, airtime);
+router.post("/airtime", protect, buyAirtime);
 
 router.post("/support", protect, support);
 

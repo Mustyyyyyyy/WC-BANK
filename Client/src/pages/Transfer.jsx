@@ -6,10 +6,12 @@ import api from "../api";
 export default function Transfer() {
   const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(true);
-  const [transfer, setTransfer] = useState({ accountNumber: "", amount: "" });
+  const [transfer, setTransfer] = useState({ bank: "", accountNumber: "", amount: "" });
   const [recipientData, setRecipientData] = useState(null);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const banks = ["GTBank", "Zenith", "Access", "UBA", "FirstBank", "FCMB", "Polaris", "Other"];
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -17,8 +19,8 @@ export default function Transfer() {
   }, [navigate]);
 
   const findRecipient = async () => {
+    if (!transfer.accountNumber || !transfer.bank) return;
     try {
-      if (!transfer.accountNumber) return;
       setMsg("");
       const token = localStorage.getItem("token");
       const res = await api.get(`/auth/find/${transfer.accountNumber}`, {
@@ -34,7 +36,9 @@ export default function Transfer() {
 
   const handleTransfer = async (e) => {
     e.preventDefault();
-    if (!recipientData || !transfer.amount) return setMsg("⚠ Please provide valid details");
+    if (!transfer.bank || !transfer.accountNumber || !recipientData || !transfer.amount) {
+      return setMsg("⚠ Please provide valid details");
+    }
 
     try {
       setLoading(true);
@@ -42,8 +46,9 @@ export default function Transfer() {
       const token = localStorage.getItem("token");
 
       const res = await api.post(
-        "/api/auth/transfer",
+        "/auth/transfer",
         {
+          bank: transfer.bank,
           accountNumber: recipientData.accountNumber,
           amount: Number(transfer.amount),
         },
@@ -56,6 +61,7 @@ export default function Transfer() {
       navigate("/transfer-success", {
         state: {
           recipientName: recipientData.name,
+          bank: transfer.bank,
           amount: Number(transfer.amount),
           transactionRef: res.data?.transaction?._id || null,
         },
@@ -77,6 +83,19 @@ export default function Transfer() {
         </div>
 
         <form onSubmit={handleTransfer}>
+          <label className="form-label">Select Bank</label>
+          <select
+            value={transfer.bank}
+            onChange={(e) => setTransfer({ ...transfer, bank: e.target.value })}
+            className="form-control mb-3"
+            style={{ padding: 12, borderRadius: 10 }}
+          >
+            <option value="">Select Bank</option>
+            {banks.map((b) => (
+              <option key={b} value={b}>{b}</option>
+            ))}
+          </select>
+
           <label className="form-label">Recipient account number</label>
           <input
             type="text"

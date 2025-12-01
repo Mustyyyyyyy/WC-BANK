@@ -2,26 +2,28 @@ const express = require("express");
 const {
   signup,
   login,
-  getMe,
   getUsers,
   getDashboard,
   updateProfile,
   support,
-  transactions
+  transactions,
+  getMe,
 } = require("../controllers/userController");
 
-const { protect } = require("../middleware/authMiddleware");
+const { buyAirtime } = require("../controllers/bankController");
 
 const router = express.Router();
 
 router.post("/signup", signup);
 router.post("/login", login);
 
-router.get("/me", protect, getMe);
-router.get("/dashboard", protect, getDashboard);
-router.get("/users", protect, getUsers);
-router.put("/update-profile", protect, updateProfile);
-router.post("/support", protect, support);
-router.get("/transactions", protect, transactions);
+router.get("/dashboard", getDashboard);
+router.get("/users", getUsers);
+router.put("/update-profile", updateProfile);
+router.post("/support", support);
+router.get("/me", getMe);
+router.get("/transactions", transactions);
+
+router.post("/airtime", buyAirtime);
 
 module.exports = router;

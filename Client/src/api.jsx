@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://wc-2.onrender.com/api",
+  baseURL: "https://wc-bank.onrender.com/api",
 });
 
 api.interceptors.request.use((config) => {

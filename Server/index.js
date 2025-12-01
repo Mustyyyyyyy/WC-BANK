@@ -36,8 +36,9 @@ app.options("", cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/api/airtime", require("./routes/airtime"));
 
-app.use("/api/auth", userRoutes);
+app.use("/api", userRoutes);
 
 app.get("/", (req, res) =>
   res.send("✅ API is running successfully & CORS enabled!")

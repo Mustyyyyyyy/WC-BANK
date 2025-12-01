@@ -1,19 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaSun, FaMoon } from "react-icons/fa";
-import api from "../api";
+import api from "../api"; 
 import "animate.css";
 
 export default function Airtime() {
   const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(true);
-
-  const [data, setData] = useState({
-    amount: "",
-    phone: "",
-    network: "",
-  });
-
+  const [data, setData] = useState({ amount: "", phone: "", network: "" });
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -30,11 +24,19 @@ export default function Airtime() {
       setLoading(true);
       setMsg("");
 
-      const res = await api.post("/airtime", {
-        amount: Number(data.amount),
-        phone: data.phone,
-        network: data.network,
-      });
+      const token = localStorage.getItem("token");
+
+      const res = await api.post(
+        "/airtime",
+        {
+          amount: Number(data.amount),
+          phone: data.phone,
+          network: data.network,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }, 
+        }
+      );
 
       window.dispatchEvent(new Event("balanceUpdated"));
       localStorage.setItem("refreshBalance", "1");
@@ -48,6 +50,7 @@ export default function Airtime() {
         },
       });
     } catch (err) {
+      console.error("Airtime Error:", err);
       setMsg(err.response?.data?.message || "❌ Airtime purchase failed");
     } finally {
       setLoading(false);

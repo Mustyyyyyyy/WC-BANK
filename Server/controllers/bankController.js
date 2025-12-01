@@ -29,31 +29,6 @@ exports.fundAccount = async (req, res) => {
   }
 };
 
-exports.airtime = async (req, res) => {
-  try {
-    const { amount } = req.body;
-    if (!amount || amount <= 0)
-      return res.status(400).json({ message: "Invalid amount" });
-
-    const user = await User.findById(req.userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    if (user.balance < amount)
-      return res.status(400).json({ message: "Insufficient funds" });
-
-    user.balance -= Number(amount);
-    await pushTransaction(user, "airtime", Number(amount), "Airtime purchase");
-
-    return res.json({
-      message: "Airtime purchased",
-      balance: user.balance
-    });
-  } catch (err) {
-    console.error("Airtime Error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
 exports.requestLoan = async (req, res) => {
   try {
     const { amount } = req.body;
@@ -237,3 +212,31 @@ exports.findUserByAccountNumber = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.buyAirtime = async (req, res) => {
+  try {
+    const { amount, phone, network } = req.body;
+
+    if (!amount || !phone || !network) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const transaction = {
+      _id: Date.now().toString(),
+      amount,
+      phone,
+      network,
+      type: "airtime",
+      date: new Date(),
+    };
+
+    return res.status(201).json({
+      message: "Airtime purchase successful",
+      transaction,
+    });
+  } catch (err) {
+    console.error("buyAirtime Error:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
