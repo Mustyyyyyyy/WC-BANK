@@ -13,7 +13,7 @@ app.use(helmet());
 
 app.use(
   cors({
-    origin: ["https://wc-bank.vercel.app/", "http://localhost:5173"],
+    origin: ["http://localhost:5173","https://wc-bank.vercel.app"],
     credentials: true,
   })
 );
