@@ -1,139 +1,147 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { FaSun, FaMoon } from "react-icons/fa";
-import api from "../api";
+import { useState } from "react";
+import Navbar from "../components/Navbar";
+import { api } from "../lib/api";
+import PageWrapper from "../components/PageWrapper";
+import FadeUp from "../components/FadeUp";
 
 export default function Transfer() {
-  const navigate = useNavigate();
-  const [darkMode, setDarkMode] = useState(true);
-  const [transfer, setTransfer] = useState({ bank: "", accountNumber: "", amount: "" });
-  const [recipientData, setRecipientData] = useState(null);
-  const [msg, setMsg] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    toAccountNumber: "",
+    amount: "",
+    transactionPin: "",
+    narration: "",
+  });
 
-  const banks = ["GTBank", "Zenith", "Access", "UBA", "FirstBank", "FCMB", "Polaris", "Other"];
+  const [receiverName, setReceiverName] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [sending, setSending] = useState(false);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) navigate("/login");
-  }, [navigate]);
+  const handleResolve = async () => {
+    setError("");
+    setMessage("");
+    setReceiverName("");
 
-  const findRecipient = async () => {
-    if (!transfer.accountNumber || !transfer.bank) return;
+    if (!form.toAccountNumber.trim()) {
+      setError("Enter recipient account number");
+      return;
+    }
+
     try {
-      setMsg("");
-      const token = localStorage.getItem("token");
-      const res = await api.get(`/auth/find/${transfer.accountNumber}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setRecipientData(res.data.user);
+      setVerifying(true);
+      const res = await api.get(`/api/accounts/resolve/${form.toAccountNumber}`);
+      setReceiverName(res.data.accountName);
     } catch (err) {
-      console.error(err);
-      setRecipientData(null);
-      setMsg(err.response?.data?.message || "❌ Account not found");
+      setError(err?.response?.data?.message || "Account not found");
+    } finally {
+      setVerifying(false);
     }
   };
 
   const handleTransfer = async (e) => {
     e.preventDefault();
-    if (!transfer.bank || !transfer.accountNumber || !recipientData || !transfer.amount) {
-      return setMsg("⚠ Please provide valid details");
-    }
+    setError("");
+    setMessage("");
 
     try {
-      setLoading(true);
-      setMsg("");
-      const token = localStorage.getItem("token");
+      setSending(true);
 
-      const res = await api.post(
-        "/auth/transfer",
-        {
-          bank: transfer.bank,
-          accountNumber: recipientData.accountNumber,
-          amount: Number(transfer.amount),
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const payload = {
+        ...form,
+        amount: parseFloat(form.amount),
+      };
 
-      window.dispatchEvent(new Event("balanceUpdated"));
-      localStorage.setItem("refreshBalance", "1");
+      const res = await api.post("/api/accounts/transfer", payload);
 
-      navigate("/transfer-success", {
-        state: {
-          recipientName: recipientData.name,
-          bank: transfer.bank,
-          amount: Number(transfer.amount),
-          transactionRef: res.data?.transaction?._id || null,
-        },
+      setMessage(res.data.message || "Transfer successful");
+      setForm({
+        toAccountNumber: "",
+        amount: "",
+        transactionPin: "",
+        narration: "",
       });
+      setReceiverName("");
     } catch (err) {
-      console.error("Transfer failed:", err);
-      setMsg(err.response?.data?.message || "❌ Transfer failed");
+      setError(err?.response?.data?.message || "Transfer failed");
     } finally {
-      setLoading(false);
+      setSending(false);
     }
   };
 
   return (
-    <div style={{ minHeight: "100vh", padding: 20, display: "grid", placeItems: "center", background: darkMode ? "#0b1220" : "#f7fbff" }}>
-      <div style={{ width: 480, borderRadius: 14, padding: 22, background: darkMode ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.9)", backdropFilter: "blur(8px)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <h2 style={{ margin: 0 }}>💸 Transfer</h2>
-          <button onClick={() => setDarkMode(d => !d)} style={{ borderRadius: "50%", width: 40, height: 40 }}>{darkMode ? <FaSun /> : <FaMoon />}</button>
-        </div>
+    <PageWrapper className="page-wrap">
+      <Navbar />
 
-        <form onSubmit={handleTransfer}>
-          <label className="form-label">Select Bank</label>
-          <select
-            value={transfer.bank}
-            onChange={(e) => setTransfer({ ...transfer, bank: e.target.value })}
-            className="form-control mb-3"
-            style={{ padding: 12, borderRadius: 10 }}
-          >
-            <option value="">Select Bank</option>
-            {banks.map((b) => (
-              <option key={b} value={b}>{b}</option>
-            ))}
-          </select>
+      <main className="container-sm">
+        <FadeUp>
+          <div className="form-card">
+            <h1 className="section-title">Transfer</h1>
 
-          <label className="form-label">Recipient account number</label>
-          <input
-            type="text"
-            value={transfer.accountNumber}
-            onChange={(e) => setTransfer({ ...transfer, accountNumber: e.target.value })}
-            onBlur={findRecipient}
-            className="form-control mb-3"
-            placeholder="e.g. 1000000001"
-            style={{ padding: 12, borderRadius: 10, border: "1px solid rgba(0,0,0,0.08)" }}
-          />
+            <form onSubmit={handleTransfer} className="form">
+              <div className="inline-group">
+                <input
+                  className="input"
+                  placeholder="Recipient Account Number"
+                  value={form.toAccountNumber}
+                  onChange={(e) =>
+                    setForm({ ...form, toAccountNumber: e.target.value })
+                  }
+                />
+                <button
+                  type="button"
+                  onClick={handleResolve}
+                  className="btn"
+                  disabled={verifying}
+                >
+                  {verifying ? "Verifying..." : "Verify"}
+                </button>
+              </div>
 
-          {recipientData && (
-            <div style={{ marginBottom: 12, padding: 10, borderRadius: 8, background: "#e6f7ff" }}>
-              ✅ Recipient: <strong>{recipientData.name}</strong> ({recipientData.accountNumber})
-            </div>
-          )}
+              {receiverName ? (
+                <p className="success-text">Account Name: {receiverName}</p>
+              ) : null}
 
-          <label className="form-label">Amount (₦)</label>
-          <input
-            type="number"
-            value={transfer.amount}
-            onChange={(e) => setTransfer({ ...transfer, amount: e.target.value })}
-            className="form-control mb-3"
-            placeholder="e.g. 5000"
-            style={{ padding: 12, borderRadius: 10 }}
-          />
+              <input
+                className="input"
+                placeholder="Amount"
+                type="number"
+                value={form.amount}
+                onChange={(e) => setForm({ ...form, amount: e.target.value })}
+              />
 
-          <button type="submit" disabled={loading} style={{ width: "100%", padding: 12, borderRadius: 10, background: "#36b9cc", color: "#fff", border: "none" }}>
-            {loading ? "Sending..." : "Send"}
-          </button>
-        </form>
+              <input
+                className="input"
+                placeholder="Narration"
+                value={form.narration}
+                onChange={(e) => setForm({ ...form, narration: e.target.value })}
+              />
 
-        {msg && <div style={{ marginTop: 12, color: "#f87171" }}>{msg}</div>}
+              <input
+                className="input"
+                placeholder="Transaction PIN"
+                type="password"
+                maxLength={4}
+                value={form.transactionPin}
+                onChange={(e) =>
+                  setForm({ ...form, transactionPin: e.target.value })
+                }
+              />
 
-        <Link to="/dashboard">
-          <button style={{ width: "100%", marginTop: 12, padding: 10, borderRadius: 10, border: "none", background: "#4e73df", color: "#fff" }}>⬅ Back to Dashboard</button>
-        </Link>
-      </div>
-    </div>
+              {error ? <p className="error-text">{error}</p> : null}
+              {message ? <p className="success-text">{message}</p> : null}
+
+              <button
+                type="submit"
+                className="btn btn-dark btn-full"
+                disabled={sending}
+              >
+                {sending ? "Sending..." : "Send Money"}
+              </button>
+            </form>
+          </div>
+        </FadeUp>
+      </main>
+    </PageWrapper>
   );
 }
